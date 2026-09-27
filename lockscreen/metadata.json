@@ -1,0 +1,19 @@
+{
+    "KPackageStructure": "Plasma/Shell",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "pavvers1@gmail.com",
+                "Name": "pavver"
+            }
+        ],
+        "Category": "",
+        "Description": "Pavver Lock Screen with Animated Screensaver for KDE Plasma 6",
+        "Id": "pavver-plasma-lockscreen",
+        "License": "GPL-3.0-or-later",
+        "Name": "Pavver Lock Screen",
+        "Version": "1.0.0",
+        "Website": "https://github.com/pavver/pavver-plasma-lockscreen"
+    },
+    "X-Plasma-APIVersion": "2"
+}

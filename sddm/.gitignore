@@ -1,0 +1,10 @@
+# Build and temporary files
+*.pyc
+__pycache__/
+.cache/
+*~
+*.swp
+.DS_Store
+
+# Test files
+test_*.qml

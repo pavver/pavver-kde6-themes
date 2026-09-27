@@ -1,0 +1,17 @@
+[SddmGreeterTheme]
+Name=Pavver SDDM Theme
+Description=Elegant, adaptive SDDM theme with Cascadia Code typography, animated cat banner, and reactive pulse feedback
+Author=pavver
+Copyright=(c) 2026, pavver
+License=GPL-3.0-or-later
+Type=sddm-theme
+Version=1.0.0
+Website=
+Screenshot=preview.png
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Email=
+Theme-Id=pavver-sddm-theme
+Theme-API=2.0
+QtVersion=6

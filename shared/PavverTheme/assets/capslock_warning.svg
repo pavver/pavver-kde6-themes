@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Glowing warning triangle with rounded corners -->
+  <path d="M 32 8 C 34.5 8 36.5 9.5 37.8 11.8 L 57.5 48 C 58.8 50.4 58.8 53.2 57.4 55.4 C 56 57.6 53.6 59 51 59 L 13 59 C 10.4 59 8 57.6 6.6 55.4 C 5.2 53.2 5.2 50.4 6.5 48 L 26.2 11.8 C 27.5 9.5 29.5 8 32 8 Z"
+        fill="#ffb703" stroke="#ffa000" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Exclamation mark stem -->
+  <path d="M 32 23 C 33.7 23 35 24.3 35 26 L 34.2 37 C 34.2 38.2 33.2 39.2 32 39.2 C 30.8 39.2 29.8 38.2 29.8 37 L 29 26 C 29 24.3 30.3 23 32 23 Z"
+        fill="#121212"/>
+  <!-- Exclamation mark dot -->
+  <circle cx="32" cy="47.5" r="3.2" fill="#121212"/>
+</svg>
