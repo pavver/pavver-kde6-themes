@@ -61,13 +61,24 @@ cd pavver-kde6-themes/lockscreen
 ./install.sh
 ```
 
-> **Порада**: запускайте інсталятор без `sudo`, щоб встановити тему для поточного користувача у `~/.local/share/plasma/shells/pavver-plasma-lockscreen`. Запуск через `sudo ./install.sh` встановлює пакет системно у `/usr/share/plasma/shells/pavver-plasma-lockscreen`, але активувати його потрібно в конфігурації потрібного користувача.
+За замовчуванням скрипт лише встановлює файли й не змінює активну оболонку.
+Для явної активації для поточного користувача:
 
-Скрипт автоматично:
+```bash
+./install.sh --activate
+```
+
+Запуск через `sudo ./install.sh` встановлює пакет системно у
+`/usr/share/plasma/shells/pavver-plasma-lockscreen`, але не активує його.
+Безпечна активація виконується через користувацьке встановлення, щоб скрипт
+міг визначити, успадкувати та запам'ятати поточний Shell package.
+
+Скрипт:
 1. Встановить мінімальний пакет `Plasma/Shell`, який замінює екран блокування.
 2. Встановить права доступу `755` для каталогів і `644` для файлів.
-3. Активує пакет через `plasmashellrc → [Shell] ShellPackage`.
-4. Перед копіюванням перевірить метадані, прев'ю, QML-імпорти та структуру KPackage.
+3. Перед копіюванням перевірить метадані, прев'ю, QML-імпорти та структуру KPackage.
+4. З `--activate` збереже попередній `ShellPackage`, використає його як fallback
+   для всіх компонентів, крім lockscreen, і відновить під час видалення.
 
 ---
 
@@ -84,11 +95,11 @@ cd pavver-kde6-themes/lockscreen
    ```bash
    kpackagetool6 --type Plasma/Shell --install \
        dist/themes/lockscreen/pavver-plasma-lockscreen
-   kwriteconfig6 --file plasmashellrc --group Shell \
-       --key ShellPackage pavver-plasma-lockscreen --notify
    ```
 
 Не копіюйте вихідний каталог `contents` напряму: він містить симлінк для розробки, тоді як `dist/` завжди містить автономну фізичну копію спільного модуля.
+
+Для активації використовуйте головний `install.sh --user --component lockscreen --activate`: він не втратить Shell package, вибраний до Pavver.
 
 Окремий екран блокування у Plasma 6.7 завантажується з пакета оболонки, тому ця тема не з'являється як самостійний пункт глобальної теми (Look-and-Feel) у Системних параметрах.
 

@@ -103,6 +103,8 @@ def main() -> int:
     lock_plugin = lock_metadata.get("KPlugin", {})
     if lock_plugin.get("Id") != "pavver-plasma-lockscreen":
         fail("Unexpected lock screen plugin Id")
+    if lock_metadata.get("X-Plasma-FallbackPackage") != "org.kde.plasma.desktop":
+        fail("Lock screen source fallback must be org.kde.plasma.desktop")
     if lock_plugin.get("Version") != version:
         fail("Lock screen metadata version does not match VERSION")
 

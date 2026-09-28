@@ -93,7 +93,7 @@ build_component \
     pavver-sddm-theme \
     "${work_dir}/dist/themes/sddm/pavver-sddm-theme" \
     /usr/share/sddm/themes/pavver-sddm-theme \
-    'sddm (>= 0.20), plasma-workspace (>= 6.0), qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
+    'sddm (>= 0.20), plasma-workspace (>= 6.0), qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-shapes, qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
     'Pavver login theme for Qt 6 SDDM' \
     'Installs the standalone Pavver SDDM theme and its System Settings preview.' \
     "${ROOT_DIR}/sddm/README.md"
@@ -102,7 +102,7 @@ build_component \
     pavver-plasma-lockscreen \
     "${work_dir}/dist/themes/lockscreen/pavver-plasma-lockscreen" \
     /usr/share/plasma/shells/pavver-plasma-lockscreen \
-    'plasma-desktop (>= 6.0), plasma-workspace (>= 6.0), qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
+    'plasma-desktop (>= 6.0), plasma-workspace (>= 6.0), qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-shapes, qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
     'Pavver lock screen shell package for Plasma 6' \
     'Installs the standalone Pavver lock screen and release preview assets.' \
     "${ROOT_DIR}/lockscreen/README.md"
@@ -111,7 +111,7 @@ build_component \
     pavver-wallpaper \
     "${work_dir}/dist/themes/wallpaper/pavver-wallpaper" \
     /usr/share/plasma/wallpapers/pavver-wallpaper \
-    'plasma-workspace (>= 6.0), qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
+    'plasma-workspace (>= 6.0), qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-shapes, qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
     'Pavver animated wallpaper for Plasma 6' \
     'Installs a configurable animated wallpaper visible in Desktop settings.' \
     "${ROOT_DIR}/wallpaper/README.md"

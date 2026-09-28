@@ -9,4 +9,4 @@ else
     scope="--user"
 fi
 
-exec "${SCRIPT_DIR}/../install.sh" "${scope}" --component lockscreen --activate "$@"
+exec "${SCRIPT_DIR}/../install.sh" "${scope}" --component lockscreen "$@"

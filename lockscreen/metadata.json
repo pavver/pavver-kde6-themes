@@ -16,5 +16,6 @@
         "Version": "1.0.0",
         "Website": "https://github.com/pavver/pavver-plasma-lockscreen"
     },
-    "X-Plasma-APIVersion": "2"
+    "X-Plasma-APIVersion": "2",
+    "X-Plasma-FallbackPackage": "org.kde.plasma.desktop"
 }

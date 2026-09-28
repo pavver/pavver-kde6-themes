@@ -98,6 +98,7 @@ if [[ "${scope}" == "system" ]]; then
 else
     data_root="${XDG_DATA_HOME:-${HOME}/.local/share}"
 fi
+lockscreen_target="${data_root}/plasma/shells/pavver-plasma-lockscreen"
 
 is_selected() {
     [[ "${component}" == "all" || "${component}" == "$1" ]]
@@ -178,7 +179,7 @@ fi
 if is_selected lockscreen; then
     install_tree \
         "${work_dir}/dist/themes/lockscreen/pavver-plasma-lockscreen" \
-        "${data_root}/plasma/shells/pavver-plasma-lockscreen" \
+        "${lockscreen_target}" \
         "metadata.json"
 fi
 
@@ -210,15 +211,63 @@ if [[ "${activate}" == true ]]; then
 
     if is_selected lockscreen; then
         if [[ "${scope}" == "user" ]]; then
-            command -v kwriteconfig6 >/dev/null 2>&1 || {
-                echo "kwriteconfig6 is required to activate the lock screen." >&2
+            for command_name in kreadconfig6 kwriteconfig6 python3; do
+                command -v "${command_name}" >/dev/null 2>&1 || {
+                    echo "${command_name} is required to activate the lock screen." >&2
+                    exit 1
+                }
+            done
+
+            state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/pavver-kde6-themes"
+            state_file="${state_dir}/previous-shell-package"
+            current_shell_package="$(kreadconfig6 --file plasmashellrc --group Shell \
+                --key ShellPackage --default org.kde.plasma.desktop)"
+
+            if [[ "${current_shell_package}" == "pavver-plasma-lockscreen" && -f "${state_file}" ]]; then
+                IFS= read -r previous_shell_package < "${state_file}" || true
+            elif [[ "${current_shell_package}" == "pavver-plasma-lockscreen" ]]; then
+                previous_shell_package="org.kde.plasma.desktop"
+            else
+                previous_shell_package="${current_shell_package}"
+            fi
+
+            if [[ ! "${previous_shell_package}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ \
+                || "${previous_shell_package}" == "pavver-plasma-lockscreen" ]]; then
+                echo "Refusing to use an invalid fallback shell package: ${previous_shell_package}" >&2
                 exit 1
-            }
-            kwriteconfig6 --file plasmashellrc --group Shell \
-                --key ShellPackage pavver-plasma-lockscreen --notify
-            echo "Activated the lock screen for the current user."
+            fi
+
+            python3 - "${lockscreen_target}/metadata.json" "${previous_shell_package}" <<'PY'
+import json
+import os
+import sys
+from pathlib import Path
+
+metadata_path = Path(sys.argv[1])
+metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+metadata["X-Plasma-FallbackPackage"] = sys.argv[2]
+temporary_path = metadata_path.with_name(f".{metadata_path.name}.tmp")
+temporary_path.write_text(
+    json.dumps(metadata, ensure_ascii=False, indent=4) + "\n",
+    encoding="utf-8",
+)
+os.chmod(temporary_path, 0o644)
+os.replace(temporary_path, metadata_path)
+PY
+
+            install -d -m 700 "${state_dir}"
+            state_tmp="$(mktemp "${state_dir}/.previous-shell-package.XXXXXX")"
+            printf '%s\n' "${previous_shell_package}" > "${state_tmp}"
+            chmod 600 "${state_tmp}"
+            mv -f -- "${state_tmp}" "${state_file}"
+
+            if [[ "${current_shell_package}" != "pavver-plasma-lockscreen" ]]; then
+                kwriteconfig6 --file plasmashellrc --group Shell \
+                    --key ShellPackage pavver-plasma-lockscreen --notify
+            fi
+            echo "Activated the lock screen; the previous Plasma shell remains its fallback."
         else
-            echo "Lock screen installed system-wide; activate it as the desktop user."
+            echo "Lock screen installed system-wide. Activate it with a user-scope install so the current shell can be preserved."
         fi
     fi
 fi
@@ -230,5 +279,5 @@ if is_selected sddm && [[ "${scope}" == "system" && "${activate}" == false ]]; t
     echo "Select 'Pavver SDDM Theme' in Login Screen settings, or rerun with --activate."
 fi
 if is_selected lockscreen && [[ "${activate}" == false ]]; then
-    echo "Activate the lock screen explicitly with this installer and --activate."
+    echo "To preserve the current Plasma shell, activate explicitly with: ./install.sh --user --component lockscreen --activate"
 fi
