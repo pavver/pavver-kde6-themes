@@ -1,0 +1,79 @@
+pkgbase=pavver-kde6-themes-suite
+_project=pavver-kde6-themes
+pkgname=(
+  pavver-sddm-theme
+  pavver-plasma-lockscreen
+  pavver-wallpaper
+  pavver-kde6-themes
+)
+pkgver=1.0.0
+pkgrel=1
+arch=('any')
+url='https://github.com/pavver/pavver-kde6-themes'
+license=('GPL-3.0-or-later')
+source=("${_project}-${pkgver}.tar.gz")
+sha256sums=('SKIP')
+options=('!strip')
+
+build() {
+  cd "${srcdir}/${_project}-${pkgver}"
+  ./scripts/build.sh --output "${srcdir}/pavver-dist"
+}
+
+check() {
+  cd "${srcdir}/${_project}-${pkgver}"
+  ./scripts/validate.sh --dist "${srcdir}/pavver-dist"
+}
+
+package_pavver-sddm-theme() {
+  pkgdesc='Pavver login theme for Qt 6 SDDM'
+  depends=('sddm>=0.20' 'plasma-workspace>=6.0' 'qt6-5compat' 'kirigami')
+
+  install -d "${pkgdir}/usr/share/sddm/themes"
+  cp -a "${srcdir}/pavver-dist/themes/sddm/pavver-sddm-theme" \
+    "${pkgdir}/usr/share/sddm/themes/"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/sddm/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
+
+package_pavver-plasma-lockscreen() {
+  pkgdesc='Pavver lock screen shell package for Plasma 6'
+  depends=('plasma-desktop>=6.0' 'plasma-workspace>=6.0' 'qt6-5compat' 'kirigami')
+
+  install -d "${pkgdir}/usr/share/plasma/shells"
+  cp -a "${srcdir}/pavver-dist/themes/lockscreen/pavver-plasma-lockscreen" \
+    "${pkgdir}/usr/share/plasma/shells/"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/lockscreen/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
+
+package_pavver-wallpaper() {
+  pkgdesc='Pavver animated wallpaper for Plasma 6'
+  depends=('plasma-workspace>=6.0' 'qt6-5compat' 'kirigami')
+
+  install -d "${pkgdir}/usr/share/plasma/wallpapers"
+  cp -a "${srcdir}/pavver-dist/themes/wallpaper/pavver-wallpaper" \
+    "${pkgdir}/usr/share/plasma/wallpapers/"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/wallpaper/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
+
+package_pavver-kde6-themes() {
+  pkgdesc='Complete Pavver visual theme family for KDE Plasma 6'
+  depends=(
+    "pavver-sddm-theme=${pkgver}-${pkgrel}"
+    "pavver-plasma-lockscreen=${pkgver}-${pkgrel}"
+    "pavver-wallpaper=${pkgver}-${pkgrel}"
+  )
+
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}

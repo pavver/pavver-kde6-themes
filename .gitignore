@@ -1,5 +1,7 @@
 *.qmlc
 *.jsc
+*.pyc
+__pycache__/
 .cache/
 build/
 dist/

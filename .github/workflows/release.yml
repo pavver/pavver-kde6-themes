@@ -1,0 +1,98 @@
+name: Build and package
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-debian:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate release layout
+        run: |
+          ./tests/test-packaging.sh
+          ./tests/test-user-install.sh
+
+      - name: Build Debian packages
+        run: ./scripts/package-deb.sh
+
+      - name: Build universal source archive
+        run: ./scripts/package-source.sh
+
+      - name: Upload Debian and source artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-and-source
+          path: |
+            dist/packages/debian/*.deb
+            dist/packages/source/*.tar.gz
+          if-no-files-found: error
+
+  arch:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build Arch packages
+        shell: bash
+        run: |
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- ./scripts/package-arch.sh
+
+      - name: Upload Arch artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch
+          path: dist/packages/arch/*.pkg.tar.zst
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - validate-and-debian
+      - arch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches VERSION
+        shell: bash
+        run: |
+          expected_tag="v$(<VERSION)"
+          if [[ "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match VERSION ($expected_tag)." >&2
+            exit 1
+          fi
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: release
+        run: sha256sum ./* > SHA256SUMS
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/*

@@ -1,61 +1,71 @@
-# Pavver KDE 6 Themes
+# Теми Pavver для KDE 6
 
-Monorepository for the Pavver KDE Plasma 6 visual family. SDDM and
-KScreenLocker use one capability-driven QML implementation, while their
-platform-specific directories contain only API adapters, entry points,
-metadata, installers, and previews.
+Монорепозиторій візуальної родини Pavver для KDE Plasma 6. SDDM і
+KScreenLocker використовують одну QML-реалізацію на основі можливостей
+платформи, а їхні окремі каталоги містять лише адаптери API, точки входу,
+метадані, інсталятори та прев'ю.
 
-## Layout
+## Історія проєкту
+
+Цей репозиторій є продовженням
+[pavver-sddm-theme](https://github.com/pavver/pavver-sddm-theme) і
+[pavver-plasma-lockscreen](https://github.com/pavver/pavver-plasma-lockscreen).
+Раніше окремі проєкти було об'єднано в один монорепозиторій, щоб розробляти
+спільний візуальний інтерфейс в одному місці, синхронно випускати релізи та
+встановлювати всі компоненти через єдиний процес пакування.
+
+## Структура
 
 ```text
 pavver-kde6-themes/
-├── shared/PavverTheme/       # Single source of truth for visual QML
-│   ├── Theme.qml             # Colors, typography, geometry, and motion
-│   ├── AuthCard.qml          # Capability-driven authentication card
+├── shared/PavverTheme/       # Єдине джерело спільного візуального QML
+│   ├── Theme.qml             # Кольори, типографіка, геометрія та анімації
+│   ├── AuthCard.qml          # Картка автентифікації на основі можливостей
 │   ├── AnimatedBackground.qml
 │   ├── Clock.qml
 │   ├── LoginLoader.qml
 │   ├── VirtualKeyboard.qml
 │   ├── assets/
 │   └── fonts/
-├── sddm/                     # SDDM Qt 6 target and adapter
-├── lockscreen/               # Plasma 6 KScreenLocker target and adapter
-└── wallpaper/                # Reserved for the wallpaper/screensaver target
+├── sddm/                     # Тема й адаптер SDDM для Qt 6
+├── lockscreen/               # Тема й адаптер KScreenLocker для Plasma 6
+└── wallpaper/                # Нативний плагін Plasma/Wallpaper
 ```
 
-The `PavverTheme` entries inside the targets are relative development
-symlinks. Their installers dereference those links, so every installed target
-is a standalone package and does not depend on this source tree.
+Елементи `PavverTheme` усередині цільових каталогів є відносними симлінками
+для розробки. Інсталятори розгортають їх у звичайні каталоги, тому кожен
+встановлений компонент є автономним пакетом і не залежить від дерева
+вихідного коду.
 
-## Appearance
+## Оформлення
 
-Edit [`shared/PavverTheme/Theme.qml`](shared/PavverTheme/Theme.qml) to
-customize the complete family. For example, changing `clockText` changes the
-clock color in every target:
+Редагуйте [`shared/PavverTheme/Theme.qml`](shared/PavverTheme/Theme.qml), щоб
+налаштувати всю візуальну родину. Наприклад, зміна `clockText` змінює колір
+годинника в кожному компоненті:
 
 ```qml
 property color clockText: "#ff3030"
 ```
 
-The same file contains brand colors, text and surface colors, action states,
-font source, radii, button dimensions, and animation timings.
+У цьому самому файлі визначено фірмові кольори, кольори тексту й поверхонь,
+стани дій, джерело шрифту, радіуси, розміри кнопок і тривалість анімацій.
 
-## Capability Contract
+## Контракт можливостей
 
-`AuthCard.qml` contains no direct SDDM or KScreenLocker calls. Targets provide
-optional models and capabilities:
+`AuthCard.qml` не звертається безпосередньо до SDDM або KScreenLocker.
+Цільові компоненти передають йому необов'язкові моделі та можливості:
 
-- a user model enables user selection;
-- `allowManualUsername` enables manual login names;
-- a session model enables session selection;
-- `passwordlessMode` replaces password input with confirmation;
-- power capability flags control action visibility;
-- keyboard layout and Caps Lock state are supplied by the target adapter.
+- модель користувачів вмикає вибір користувача;
+- `allowManualUsername` дозволяє вводити ім'я користувача вручну;
+- модель сеансів вмикає вибір сеансу;
+- `passwordlessMode` замінює введення пароля підтвердженням;
+- прапорці системних можливостей визначають видимість кнопок живлення;
+- розкладку клавіатури та стан Caps Lock надає адаптер цільової платформи.
 
-System operations are exposed as QML signals. `SddmBackend.qml` and
-`LockScreenBackend.qml` are the only components that access platform APIs.
+Системні операції передаються через сигнали QML. Лише `SddmBackend.qml` і
+`LockScreenBackend.qml` звертаються до API відповідних платформ.
 
-## Development Tests
+## Тести для розробки
 
 ```bash
 qml6 shared/demo/Preview.qml
@@ -74,5 +84,54 @@ qml6 demo/Preview.qml
 qml6 demo/PasswordlessPreview.qml
 ```
 
-Run the target installers from their respective directories when the visual
-and integration tests are complete.
+Перед встановленням зберіть і перевірте всі автономні компоненти:
+
+```bash
+./scripts/build.sh
+./tests/test-packaging.sh
+```
+
+## Встановлення
+
+Пакети дистрибутива є рекомендованим способом встановлення, оскільки пакетний
+менеджер керує оновленням і видаленням файлів. Пакети навмисно не змінюють
+активну конфігурацію робочого середовища.
+
+```bash
+# Універсальне встановлення з архіву вихідного коду
+./install.sh --user
+sudo ./install.sh --system
+
+# Додавайте --activate лише для явної зміни активної конфігурації
+./install.sh --user --component lockscreen --activate
+sudo ./install.sh --system --component sddm --activate
+```
+
+Встановлення для користувача додає екран блокування та шпалери. SDDM завжди
+встановлюється загальносистемно. Інсталятори окремих компонентів залишаються
+сумісними обгортками над головним інсталятором.
+
+## Пакування
+
+```bash
+./scripts/package-source.sh
+./scripts/package-deb.sh
+./scripts/package-arch.sh
+```
+
+Складання для Debian і Arch створює окремі пакети компонентів, а також
+метапакет `pavver-kde6-themes`. GitHub Actions перевіряє пакування під час
+надсилання змін і для запитів на злиття. Тег, що відповідає
+`v$(cat VERSION)`, публікує всі пакети, архів вихідного коду та
+`SHA256SUMS` у GitHub Releases.
+
+## Прев'ю в KDE
+
+- SDDM читає `Screenshot=preview.png` і показує зображення в налаштуваннях
+  екрана входу.
+- Шпалери є нативним плагіном `Plasma/Wallpaper` і з'являються під назвою
+  **Pavver Animated Wallpaper** у налаштуваннях стільниці та шпалер; релізний
+  пакет також містить `preview.png`.
+- Plasma 6.7 не має окремого засобу вибору сторонніх shell-пакетів екрана
+  блокування. Його прев'ю постачаються для сторінки релізу й переглядачів
+  пакетів, а активація виконується окремо для кожного користувача.

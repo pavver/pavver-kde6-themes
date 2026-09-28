@@ -41,6 +41,7 @@ Item {
     property real bannerTargetScale: 1.0
     property real bannerTargetOpacity: 1.0
     property bool enableAnimations: false
+    property bool contentAnimationsEnabled: true
 
     readonly property bool isFullyVisible: bannerContainer.opacity > 0.05
 
@@ -90,7 +91,9 @@ Item {
             to: 36000000
             duration: 36000000
             loops: Animation.Infinite
-            running: bannerContainer.visible && bannerContainer.opacity > 0
+            running: root.contentAnimationsEnabled
+                && bannerContainer.visible
+                && bannerContainer.opacity > 0
         }
 
         // Exact animation timing from original WallPapper/index.html:

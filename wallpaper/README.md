@@ -1,9 +1,54 @@
-# Wallpaper Target
+# Анімовані шпалери Pavver
 
-Reserved for the future Plasma 6 wallpaper/screensaver package.
+Нативний плагін анімованих шпалер для KDE Plasma 6. Він повторно використовує
+ті самі реалізації `AnimatedBackground.qml` і `Theme.qml`, що й SDDM та
+екран блокування.
 
-The target should reuse `../shared/PavverTheme/AnimatedBackground.qml` and
-`Theme.qml`, with its own thin Plasma wallpaper API adapter and package
-metadata. The screensaver presentation and responsive geometry currently used
-by the lock screen are intentionally implemented in the shared background and
-can be reused here without copying QML.
+## Системні вимоги
+
+- KDE Plasma 6.
+- QML-модулі `QtQuick`, `QtQuick.Shapes`,
+  `Qt5Compat.GraphicalEffects` і Kirigami.
+
+Пакети дистрибутивів оголошують ці залежності. Універсальний інсталятор
+перевіряє повний автономний артефакт перед копіюванням.
+
+## Встановлення
+
+Для поточного користувача:
+
+```bash
+./install.sh
+```
+
+Для всіх користувачів:
+
+```bash
+sudo ./install.sh
+```
+
+Цей скрипт є обгорткою над спільним інсталятором репозиторію. Він не змінює
+поточні шпалери автоматично.
+
+Відкрийте налаштування стільниці та шпалер, виберіть
+**Pavver Animated Wallpaper** як тип шпалер і скористайтеся параметром руху,
+щоб увімкнути або вимкнути анімацію банера.
+
+## Розробка
+
+З кореня репозиторію виконайте:
+
+```bash
+./scripts/build.sh
+./scripts/validate.sh
+```
+
+Релізний пакет створюється в
+`dist/themes/wallpaper/pavver-wallpaper`. Його `preview.png` є канонічним
+прев'ю режиму скрінсейвера екрана блокування, тому сторінка релізу й
+переглядачі пакетів KDE показують той самий візуальний стан, що й живі
+шпалери.
+
+Дерево вихідного коду навмисно не містить копії модуля `PavverTheme`.
+Під час складання його автономна копія розміщується в
+`contents/ui/PavverTheme` усередині релізного артефакту.

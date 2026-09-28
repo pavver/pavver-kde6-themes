@@ -7,8 +7,9 @@
                 "Name": "pavver"
             }
         ],
-        "Category": "",
+        "Category": "Appearance",
         "Description": "Pavver Lock Screen with Animated Screensaver for KDE Plasma 6",
+        "Icon": "system-lock-screen",
         "Id": "pavver-plasma-lockscreen",
         "License": "GPL-3.0-or-later",
         "Name": "Pavver Lock Screen",

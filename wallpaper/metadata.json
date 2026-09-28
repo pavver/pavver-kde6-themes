@@ -1,0 +1,21 @@
+{
+    "KPackageStructure": "Plasma/Wallpaper",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "pavvers1@gmail.com",
+                "Name": "pavver"
+            }
+        ],
+        "Category": "Appearance",
+        "Description": "Animated Pavver background for KDE Plasma 6",
+        "Icon": "preferences-desktop-wallpaper",
+        "Id": "pavver-wallpaper",
+        "License": "GPL-3.0-or-later",
+        "Name": "Pavver Animated Wallpaper",
+        "Version": "1.0.0",
+        "Website": "https://github.com/pavver/pavver-kde6-themes"
+    },
+    "X-KDE-ParentApp": "org.kde.plasmashell",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
