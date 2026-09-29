@@ -50,6 +50,9 @@ for required_path in \
     lockscreen/contents/lockscreen/LockScreen.qml \
     lockscreen/contents/lockscreen/LockScreenUi.qml \
     lockscreen/contents/lockscreen/LockScreenBackend.qml \
+    lockscreen/contents/lockscreen/LockOsd.qml \
+    lockscreen/contents/lockscreen/PasswordSync.qml \
+    lockscreen/contents/lockscreen/qmldir \
     lockscreen/preview.png \
     lockscreen/preview_screensaver.png \
     wallpaper/metadata.json \
@@ -113,6 +116,9 @@ install -m 644 \
     "${ROOT_DIR}/lockscreen/contents/lockscreen/LockScreen.qml" \
     "${ROOT_DIR}/lockscreen/contents/lockscreen/LockScreenUi.qml" \
     "${ROOT_DIR}/lockscreen/contents/lockscreen/LockScreenBackend.qml" \
+    "${ROOT_DIR}/lockscreen/contents/lockscreen/LockOsd.qml" \
+    "${ROOT_DIR}/lockscreen/contents/lockscreen/PasswordSync.qml" \
+    "${ROOT_DIR}/lockscreen/contents/lockscreen/qmldir" \
     "${lock_target}/contents/lockscreen/"
 cp -a -- "${SHARED_DIR}" "${lock_target}/contents/lockscreen/PavverTheme"
 for preview in "${ROOT_DIR}"/lockscreen/preview*.png; do

@@ -102,7 +102,7 @@ build_component \
     pavver-plasma-lockscreen \
     "${work_dir}/dist/themes/lockscreen/pavver-plasma-lockscreen" \
     /usr/share/plasma/shells/pavver-plasma-lockscreen \
-    'plasma-desktop (>= 6.0), plasma-workspace (>= 6.0), qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-shapes, qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
+    'plasma-desktop (>= 6.0), plasma-workspace (>= 6.0), qml6-module-org-kde-ksvg, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-shapes, qml6-module-qt5compat-graphicaleffects, qml6-module-org-kde-kirigami' \
     'Pavver lock screen shell package for Plasma 6' \
     'Installs the standalone Pavver lock screen and release preview assets.' \
     "${ROOT_DIR}/lockscreen/README.md"

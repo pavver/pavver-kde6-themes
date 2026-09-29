@@ -8,6 +8,7 @@ Item {
     anchors.fill: parent
 
     readonly property bool softwareRendering: GraphicsInfo.api === GraphicsInfo.Software
+    property bool viewVisible: false
 
     Kirigami.Theme.colorSet: Kirigami.Theme.Complementary
     Kirigami.Theme.inherit: false
@@ -46,6 +47,7 @@ Item {
     }
 
     function clearPassword() {
+        PasswordSync.password = "";
         compactLockCard.clearPassword();
     }
 
@@ -219,7 +221,7 @@ Item {
             if (!lockScreenUi.isScreensaverMode) {
                 virtualKeyboard.hide();
                 lockScreenUi.isScreensaverMode = true;
-                compactLockCard.clearPassword();
+                lockScreenUi.clearPassword();
                 interactionRoot.forceActiveFocus();
                 event.accepted = true;
             }
@@ -275,6 +277,8 @@ Item {
                     allowManualUsername: false
                     showSessionBadge: false
                     passwordlessMode: lockScreenUi.passwordlessConfirmationVisible
+                    passwordText: PasswordSync.password
+                    authenticationHint: backend.alternativeAuthenticationHint
                     authenticationBlocked: graceLockTimer.running
                     virtualKeyboardActive: virtualKeyboard.keyboardActive
                     capsLockActive: backend.capsLockActive
@@ -284,6 +288,12 @@ Item {
                     canSuspend: backend.canSuspend
                     canReboot: backend.canReboot
                     canPowerOff: backend.canPowerOff
+
+                    onPasswordTextChanged: {
+                        if (PasswordSync.password !== passwordText) {
+                            PasswordSync.password = passwordText;
+                        }
+                    }
 
                     onVirtualKeyboardRequested: {
                         compactLockCard.focusPassword();
@@ -309,6 +319,15 @@ Item {
                         backend.authenticate(password);
                     }
                 }
+
+                Connections {
+                    target: PasswordSync
+                    function onPasswordChanged() {
+                        if (compactLockCard.passwordText !== PasswordSync.password) {
+                            compactLockCard.passwordText = PasswordSync.password;
+                        }
+                    }
+                }
             }
         }
     }
@@ -320,12 +339,21 @@ Item {
         onEnterPressed: compactLockCard.handleVirtualKeyboardEnter()
     }
 
+    Loader {
+        z: 9
+        active: lockScreenUi.viewVisible
+        source: "LockOsd.qml"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Kirigami.Units.gridUnit
+    }
+
     Connections {
         target: backend
         ignoreUnknownSignals: true
 
         function onAboutToSuspend() {
-            compactLockCard.clearPassword();
+            lockScreenUi.clearPassword();
         }
 
         function onAuthenticationFailed(message) {
@@ -334,6 +362,7 @@ Item {
         }
 
         function onAuthenticationSucceeded(hadPrompt) {
+            lockScreenUi.clearPassword();
             if (hadPrompt) {
                 unlockTimer.start();
             } else {
@@ -356,6 +385,15 @@ Item {
         function onPromptChanged(prompt) {
             compactLockCard.passwordPrompt = prompt;
         }
+
+        function onSecretPrompted() {
+            compactLockCard.concealPassword();
+            compactLockCard.focusPassword();
+        }
+
+        function onNoninteractiveError(kind, message) {
+            compactLockCard.showStatusMessage(message, "error");
+        }
     }
 
     Timer {
@@ -370,7 +408,7 @@ Item {
         interval: 2000
         repeat: false
         onTriggered: {
-            compactLockCard.clearPassword();
+            lockScreenUi.clearPassword();
             backend.startAuthenticating();
             compactLockCard.focusPassword();
         }

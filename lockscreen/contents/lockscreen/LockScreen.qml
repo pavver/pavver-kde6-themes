@@ -3,9 +3,6 @@ import QtQuick
 Item {
     id: root
     property bool debug: false
-    property string notification
-    signal clearPassword()
-    signal notificationRepeated()
 
     property bool viewVisible: false
 
@@ -15,10 +12,9 @@ Item {
     implicitWidth: 800
     implicitHeight: 600
 
-    onClearPassword: lockScreenUi.clearPassword()
-
     LockScreenUi {
         id: lockScreenUi
         anchors.fill: parent
+        viewVisible: root.viewVisible
     }
 }

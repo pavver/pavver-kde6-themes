@@ -89,6 +89,9 @@ def main() -> int:
         "contents/lockscreen/LockScreen.qml",
         "contents/lockscreen/LockScreenUi.qml",
         "contents/lockscreen/LockScreenBackend.qml",
+        "contents/lockscreen/LockOsd.qml",
+        "contents/lockscreen/PasswordSync.qml",
+        "contents/lockscreen/qmldir",
         "contents/lockscreen/PavverTheme/qmldir",
     ])
     require_files(wallpaper, [

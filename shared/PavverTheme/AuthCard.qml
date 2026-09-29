@@ -79,10 +79,12 @@ Item {
     property string manualUsername: ""
     property bool passwordlessMode: false
     property string passwordPrompt: ""
+    property string authenticationHint: ""
     property string passwordlessLabel: "Розблокувати"
     property bool virtualKeyboardActive: false
     property Item virtualKeyboardTarget: passwordInput
     property alias passwordField: passwordInput
+    property alias passwordText: passwordInput.text
     readonly property bool isTyping: !passwordlessMode
         && (passwordInput.text.length > 0
             || (usernameInput.visible && usernameInput.text.length > 0))
@@ -254,6 +256,8 @@ Item {
     property real pulseBorderWidth: 1.5
     property string statusMessage: ""
     property string statusType: "info"
+    readonly property string displayedStatusMessage: statusMessage || authenticationHint
+    readonly property string displayedStatusType: statusMessage ? statusType : "info"
     property string failureMessage: "Не вдалося виконати автентифікацію"
 
     function focusUsername() {
@@ -290,6 +294,10 @@ Item {
 
     function clearPassword() {
         passwordInput.text = "";
+        concealPassword();
+    }
+
+    function concealPassword() {
         passwordInput.echoMode = TextInput.Password;
     }
 
@@ -897,7 +905,7 @@ Item {
             anchors.bottomMargin: 6
             height: 18
             spacing: 8
-            visible: root.statusMessage.length > 0
+            visible: root.displayedStatusMessage.length > 0
             opacity: visible ? 1.0 : 0.0
 
             Behavior on opacity { NumberAnimation { duration: Theme.fastAnimation } }
@@ -907,16 +915,16 @@ Item {
                 height: 7
                 radius: 3.5
                 anchors.verticalCenter: parent.verticalCenter
-                color: root.statusType === "error" ? Theme.errorSoft
-                    : (root.statusType === "success" ? Theme.success : Theme.primary)
+                color: root.displayedStatusType === "error" ? Theme.errorSoft
+                    : (root.displayedStatusType === "success" ? Theme.success : Theme.primary)
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 15
-                text: root.statusMessage
-                color: root.statusType === "error" ? Theme.errorSoft
-                    : (root.statusType === "success" ? Theme.success : Theme.primary)
+                text: root.displayedStatusMessage
+                color: root.displayedStatusType === "error" ? Theme.errorSoft
+                    : (root.displayedStatusType === "success" ? Theme.success : Theme.primary)
                 font.family: root.mainFontFamily
                 font.pixelSize: 14
                 font.bold: true

@@ -40,7 +40,7 @@ package_pavver-sddm-theme() {
 
 package_pavver-plasma-lockscreen() {
   pkgdesc='Pavver lock screen shell package for Plasma 6'
-  depends=('plasma-desktop>=6.0' 'plasma-workspace>=6.0' 'qt6-declarative' 'qt6-5compat' 'kirigami')
+  depends=('plasma-desktop>=6.0' 'plasma-workspace>=6.0' 'ksvg' 'qt6-declarative' 'qt6-5compat' 'kirigami')
 
   install -d "${pkgdir}/usr/share/plasma/shells"
   cp -a "${srcdir}/pavver-dist/themes/lockscreen/pavver-plasma-lockscreen" \

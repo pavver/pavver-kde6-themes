@@ -15,6 +15,10 @@ Item {
         ? kscreenlocker_userImage : ""
 
     readonly property bool capsLockActive: capsLockState.locked
+    readonly property int authenticatorTypes: standaloneDemo
+        || typeof authenticator === "undefined" ? 0 : authenticator.authenticatorTypes
+    readonly property string alternativeAuthenticationHint: authenticatorTypes !== 0
+        ? "Пароль, відбиток пальця або смарткартка" : ""
     readonly property bool hasRealLayoutSwitcher: layoutSwitcher.layoutNames !== undefined
         && layoutSwitcher.layoutNames !== null
     readonly property bool hasMultipleKeyboardLayouts: hasRealLayoutSwitcher
@@ -36,6 +40,8 @@ Item {
     signal informationMessage(string message)
     signal errorMessage(string message)
     signal promptChanged(string prompt)
+    signal secretPrompted()
+    signal noninteractiveError(int kind, string message)
     signal aboutToSuspend()
 
     KeyboardIndicator.KeyState {
@@ -137,6 +143,16 @@ Item {
             if (authenticator.prompt) {
                 root.promptChanged(authenticator.prompt);
             }
+        }
+
+        function onPromptForSecretChanged() {
+            root.secretPrompted();
+        }
+
+        function onNoninteractiveError(kind, sourceAuthenticator) {
+            var message = sourceAuthenticator && sourceAuthenticator.errorMessage
+                ? sourceAuthenticator.errorMessage : "Неінтерактивна автентифікація не вдалася";
+            root.noninteractiveError(kind, message);
         }
     }
 }
