@@ -20,6 +20,19 @@ ln -s -- "${ROOT_DIR}/tests/kconfig-mock.sh" "${test_home}/bin/kreadconfig6"
 ln -s -- "${ROOT_DIR}/tests/kconfig-mock.sh" "${test_home}/bin/kwriteconfig6"
 export PATH="${test_home}/bin:${PATH}"
 
+metadata_fallback() {
+    awk -F '"' '
+        $2 == "X-Plasma-FallbackPackage" {
+            value = $4
+            found++
+        }
+        END {
+            if (found != 1) exit 1
+            print value
+        }
+    ' "$1"
+}
+
 "${ROOT_DIR}/install.sh" --user
 test -f "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen/metadata.json"
 test -f "${XDG_DATA_HOME}/plasma/wallpapers/pavver-wallpaper/metadata.json"
@@ -37,20 +50,14 @@ test "$(kreadconfig6 --file plasmashellrc --group Shell --key ShellPackage)" = \
     "pavver-plasma-lockscreen"
 test "$(cat "${XDG_STATE_HOME}/pavver-kde6-themes/previous-shell-package")" = \
     "example.custom.shell"
-python3 - "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen/metadata.json" <<'PY'
-import json
-import sys
-
-with open(sys.argv[1], encoding="utf-8") as metadata_file:
-    metadata = json.load(metadata_file)
-assert metadata["X-Plasma-FallbackPackage"] == "example.custom.shell"
-PY
+test "$(metadata_fallback "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen/metadata.json")" = \
+    "example.custom.shell"
 
 "${ROOT_DIR}/install.sh" --user --component lockscreen --activate
 test "$(cat "${XDG_STATE_HOME}/pavver-kde6-themes/previous-shell-package")" = \
     "example.custom.shell"
-python3 -c 'import json, sys; assert json.load(open(sys.argv[1]))["X-Plasma-FallbackPackage"] == "example.custom.shell"' \
-    "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen/metadata.json"
+test "$(metadata_fallback "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen/metadata.json")" = \
+    "example.custom.shell"
 
 "${ROOT_DIR}/uninstall.sh" --user --component lockscreen
 test "$(kreadconfig6 --file plasmashellrc --group Shell --key ShellPackage)" = \

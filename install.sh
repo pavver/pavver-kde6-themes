@@ -165,6 +165,32 @@ install_tree() {
     printf 'Installed %s\n' "${target_dir}"
 }
 
+set_fallback_package() {
+    local metadata_path="$1"
+    local fallback_package="$2"
+    local metadata_tmp
+
+    metadata_tmp="$(mktemp "$(dirname "${metadata_path}")/.metadata.json.XXXXXX")"
+    if ! awk -v fallback="${fallback_package}" '
+        /^[[:space:]]*"X-Plasma-FallbackPackage"[[:space:]]*:/ {
+            match($0, /^[[:space:]]*/)
+            indent = substr($0, 1, RLENGTH)
+            print indent "\"X-Plasma-FallbackPackage\": \"" fallback "\""
+            replaced++
+            next
+        }
+        { print }
+        END { exit(replaced == 1 ? 0 : 1) }
+    ' "${metadata_path}" > "${metadata_tmp}"; then
+        rm -f -- "${metadata_tmp}"
+        echo "Failed to update X-Plasma-FallbackPackage in ${metadata_path}." >&2
+        return 1
+    fi
+
+    chmod 644 "${metadata_tmp}"
+    mv -f -- "${metadata_tmp}" "${metadata_path}"
+}
+
 if is_selected sddm; then
     if [[ "${scope}" == "user" ]]; then
         echo "Skipping SDDM in user scope; use sudo ./install.sh --system."
@@ -211,7 +237,7 @@ if [[ "${activate}" == true ]]; then
 
     if is_selected lockscreen; then
         if [[ "${scope}" == "user" ]]; then
-            for command_name in kreadconfig6 kwriteconfig6 python3; do
+            for command_name in kreadconfig6 kwriteconfig6; do
                 command -v "${command_name}" >/dev/null 2>&1 || {
                     echo "${command_name} is required to activate the lock screen." >&2
                     exit 1
@@ -237,23 +263,9 @@ if [[ "${activate}" == true ]]; then
                 exit 1
             fi
 
-            python3 - "${lockscreen_target}/metadata.json" "${previous_shell_package}" <<'PY'
-import json
-import os
-import sys
-from pathlib import Path
-
-metadata_path = Path(sys.argv[1])
-metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-metadata["X-Plasma-FallbackPackage"] = sys.argv[2]
-temporary_path = metadata_path.with_name(f".{metadata_path.name}.tmp")
-temporary_path.write_text(
-    json.dumps(metadata, ensure_ascii=False, indent=4) + "\n",
-    encoding="utf-8",
-)
-os.chmod(temporary_path, 0o644)
-os.replace(temporary_path, metadata_path)
-PY
+            set_fallback_package \
+                "${lockscreen_target}/metadata.json" \
+                "${previous_shell_package}"
 
             install -d -m 700 "${state_dir}"
             state_tmp="$(mktemp "${state_dir}/.previous-shell-package.XXXXXX")"
