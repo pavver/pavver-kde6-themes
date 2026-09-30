@@ -82,6 +82,7 @@ QtObject {
     property int actionButtonSize: 48
 
     // Motion
+    property int continuousAnimationFps: 30
     property int microAnimation: 80
     property int fastAnimation: 150
     property int revealAnimation: 180

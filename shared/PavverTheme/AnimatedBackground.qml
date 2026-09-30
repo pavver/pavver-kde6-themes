@@ -82,15 +82,11 @@ Item {
             NumberAnimation { duration: Theme.slowAnimation; easing.type: Easing.OutCubic }
         }
 
-        property real animTime: 0
+        readonly property real animTime: animationClock.elapsed
 
-        // Master continuous timeline (in ms) running smoothly without precision loss
-        // 36,000,000 ms = 10 hours continuous loop (exact multiple of 6000ms period)
-        NumberAnimation on animTime {
-            from: 0
-            to: 36000000
-            duration: 36000000
-            loops: Animation.Infinite
+        AnimationClock {
+            id: animationClock
+            framesPerSecond: Theme.continuousAnimationFps
             running: root.contentAnimationsEnabled
                 && bannerContainer.visible
                 && bannerContainer.opacity > 0

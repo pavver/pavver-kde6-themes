@@ -1,5 +1,6 @@
 module PavverTheme
 singleton Theme 1.0 Theme.qml
+AnimationClock 1.0 AnimationClock.qml
 AuthCard 1.0 AuthCard.qml
 AnimatedBackground 1.0 AnimatedBackground.qml
 Clock 1.0 Clock.qml

@@ -35,14 +35,11 @@ Item {
 
     property real blurStrength: 12.0
     readonly property real effectiveBlurRadius: Math.max(root.blurStrength * root.scaleFactor, 10.0)
-    property real animTime: 0
+    readonly property real animTime: animationClock.elapsed
 
-    // Hardware-synchronized animation timeline (6000ms loop)
-    NumberAnimation on animTime {
-        from: 0
-        to: 6000
-        duration: 6000
-        loops: Animation.Infinite
+    AnimationClock {
+        id: animationClock
+        framesPerSecond: Theme.continuousAnimationFps
         running: root.visible && root.opacity > 0
     }
 
