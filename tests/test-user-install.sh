@@ -15,6 +15,11 @@ export XDG_DATA_HOME="${test_home}/data"
 export XDG_CONFIG_HOME="${test_home}/config"
 export XDG_STATE_HOME="${test_home}/state"
 
+mkdir -p -- "${test_home}/bin"
+ln -s -- "${ROOT_DIR}/tests/kconfig-mock.sh" "${test_home}/bin/kreadconfig6"
+ln -s -- "${ROOT_DIR}/tests/kconfig-mock.sh" "${test_home}/bin/kwriteconfig6"
+export PATH="${test_home}/bin:${PATH}"
+
 "${ROOT_DIR}/install.sh" --user
 test -f "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen/metadata.json"
 test -f "${XDG_DATA_HOME}/plasma/wallpapers/pavver-wallpaper/metadata.json"
@@ -24,8 +29,6 @@ test ! -e "${XDG_DATA_HOME}/sddm"
 test ! -e "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen"
 test ! -e "${XDG_DATA_HOME}/plasma/wallpapers/pavver-wallpaper"
 
-command -v kreadconfig6 >/dev/null 2>&1
-command -v kwriteconfig6 >/dev/null 2>&1
 kwriteconfig6 --file plasmashellrc --group Shell \
     --key ShellPackage example.custom.shell
 
