@@ -65,6 +65,13 @@ def require_files(base: Path, paths: list[str]) -> None:
             fail(f"Missing release file: {path}")
 
 
+def require_text(path: Path, snippets: list[str]) -> None:
+    text = path.read_text(encoding="utf-8")
+    for snippet in snippets:
+        if snippet not in text:
+            fail(f"{path} is missing required text: {snippet}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, required=True)
@@ -142,6 +149,18 @@ def main() -> int:
             fail(f"Unexpected SDDM metadata value for {key}")
 
     ET.parse(wallpaper / "contents/config/main.xml")
+
+    require_text(lockscreen / "contents/lockscreen/LockScreen.qml", [
+        "property bool viewVisible",
+        "property string notification",
+        "signal clearPassword()",
+        "signal notificationRepeated()",
+        "onClearPassword: lockScreenUi.clearPassword()",
+    ])
+    require_text(wallpaper / "contents/ui/main.qml", [
+        "fallbackScreenGeometry",
+        "screenGeometry: root.screenGeometry",
+    ])
 
     source_hashes = tree_hashes(root / "shared/PavverTheme")
     shared_targets = [

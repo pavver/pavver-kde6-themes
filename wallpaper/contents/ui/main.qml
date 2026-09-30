@@ -13,6 +13,10 @@ WallpaperItem {
     readonly property real bannerVisualWidth: Math.min(
         width * 0.85,
         (height * 0.70) * bannerAspectRatio)
+    readonly property var fallbackScreenGeometry: Qt.rect(0, 0, width, height)
+    readonly property var screenGeometry: root.parent
+        && root.parent.screenGeometry !== undefined
+        ? root.parent.screenGeometry : fallbackScreenGeometry
 
     function updateFullscreenState() {
         var fullscreen = false;
@@ -42,7 +46,7 @@ WallpaperItem {
         filterByScreen: true
         filterHidden: true
         activity: activityInfo.currentActivity
-        screenGeometry: root.parent.screenGeometry
+        screenGeometry: root.screenGeometry
 
         onActiveTaskChanged: fullscreenUpdateTimer.restart()
         onCountChanged: fullscreenUpdateTimer.restart()
