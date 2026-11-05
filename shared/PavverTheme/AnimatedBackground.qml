@@ -84,6 +84,13 @@ Item {
 
         readonly property real animTime: animationClock.elapsed
 
+        // The triangles live in a hidden blur source, so their changes alone do not schedule a frame.
+        onAnimTimeChanged: {
+            if (root.Window.window) {
+                root.Window.window.update();
+            }
+        }
+
         AnimationClock {
             id: animationClock
             framesPerSecond: Theme.continuousAnimationFps
