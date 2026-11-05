@@ -29,11 +29,53 @@ Item {
     readonly property int texWidth: Math.round(675.0 * renderScale)
     readonly property int texHeight: Math.round(190.0 * renderScale)
 
-    // Dynamic Gaussian blur radius:
+    // Each triangle is blurred once into a static texture sized to the triangle area,
+    // and the animation only scales those textures, so no shader runs per frame.
+    readonly property real blurScale: 3.0
+    readonly property real blurAreaWidth: 110.0
+    readonly property real blurAreaHeight: 190.0
+    readonly property real triangleOriginX: Math.round(70.0 * blurScale)
+    readonly property real triangleOriginY: Math.round(60.0 * blurScale)
+    readonly property var triangles: [
+        { path: "M -49 0 L 0 0 L -30 -40 Z", fill: Theme.trianglePrimary },
+        { path: "M 24 -40 L 0 0 L -30 -40 Z", fill: Theme.triangleSecondary },
+        { path: "M 24 -40 L 0 0 L 24 56 Z", fill: Theme.trianglePrimary },
+        { path: "M 0 96 L 0 0 L 24 56 Z", fill: Theme.triangleSecondary },
+        { path: "M 0 96 L 0 0 L -48 96 Z", fill: Theme.trianglePrimary },
+        { path: "M -48 0 L 0 0 L -48 96 Z", fill: Theme.triangleSecondary }
+    ]
+
+    component Triangle: Item {
+        id: triangle
+        property string path
+        property color fill
+        x: root.triangleOriginX
+        y: root.triangleOriginY
+        scale: root.blurScale
+        transformOrigin: Item.TopLeft
+
+        Shape {
+            preferredRendererType: Shape.GeometryRenderer
+            ShapePath {
+                fillColor: triangle.fill
+                strokeWidth: 0
+                strokeColor: "transparent"
+                PathSvg { path: triangle.path }
+            }
+        }
+    }
+
+    Component {
+        id: triangleBlur
+        GaussianBlur {
+            radius: root.blurRadius
+            samples: 28
+        }
+    }
+
     // In original SVG WallPapper/index.html, stdDeviation="1.5".
     // The visible Gaussian blur kernel radius (3 * sigma) is 4.5 SVG base units.
-    // In texture coordinates, this translates to 4.5 * renderScale pixels.
-    readonly property real dynamicBlurRadius: 4.5 * renderScale
+    readonly property real blurRadius: 4.5 * blurScale
 
     // Target geometric parameters driven by LockScreenUi state machine
     property real bannerTargetCenterX: parent ? parent.width / 2.0 : 960
@@ -84,13 +126,6 @@ Item {
 
         readonly property real animTime: animationClock.elapsed
 
-        // The triangles live in a hidden blur source, so their changes alone do not schedule a frame.
-        onAnimTimeChanged: {
-            if (root.Window.window) {
-                root.Window.window.update();
-            }
-        }
-
         AnimationClock {
             id: animationClock
             framesPerSecond: Theme.continuousAnimationFps
@@ -127,132 +162,60 @@ Item {
             mipmap: true
         }
 
-        // 2. The 6 animated triangles - Dynamically scaled to match maximum screen resolution
-        // Uses explicit GaussianBlur item for guaranteed hardware shader execution and visible glowing halo
+        // 2. The 6 animated triangles over a static copy at rest, which keeps the seams between
+        // separately blurred triangles filled.
         Item {
             id: trianglesContainer
-            width: root.texWidth
-            height: root.texHeight
-            scale: 1.0 / root.renderScale
+            width: Math.round(root.blurAreaWidth * root.blurScale)
+            height: Math.round(root.blurAreaHeight * root.blurScale)
+            scale: 1.0 / root.blurScale
             transformOrigin: Item.TopLeft
 
             Item {
-                id: trianglesSource
                 anchors.fill: parent
-                visible: false
+                layer.enabled: true
+                layer.smooth: true
+                layer.effect: triangleBlur
 
-                Item {
-                    id: trianglesOrigin
-                    x: Math.round(70.0 * root.renderScale)
-                    y: Math.round(60.0 * root.renderScale)
-                    scale: root.renderScale
-                    transformOrigin: Item.TopLeft
-
-                    Shape {
-                        id: t1
-                        preferredRendererType: Shape.GeometryRenderer
-                        ShapePath {
-                            fillColor: Theme.trianglePrimary
-                            strokeWidth: 0
-                            strokeColor: "transparent"
-                            PathSvg { path: "M -49 0 L 0 0 L -30 -40 Z" }
-                        }
-                        transform: Scale {
-                            origin.x: 0; origin.y: 0
-                            xScale: bannerContainer.getScale(0)
-                            yScale: bannerContainer.getScale(0)
-                        }
-                    }
-
-                    Shape {
-                        id: t2
-                        preferredRendererType: Shape.GeometryRenderer
-                        ShapePath {
-                            fillColor: Theme.triangleSecondary
-                            strokeWidth: 0
-                            strokeColor: "transparent"
-                            PathSvg { path: "M 24 -40 L 0 0 L -30 -40 Z" }
-                        }
-                        transform: Scale {
-                            origin.x: 0; origin.y: 0
-                            xScale: bannerContainer.getScale(1)
-                            yScale: bannerContainer.getScale(1)
-                        }
-                    }
-
-                    Shape {
-                        id: t3
-                        preferredRendererType: Shape.GeometryRenderer
-                        ShapePath {
-                            fillColor: Theme.trianglePrimary
-                            strokeWidth: 0
-                            strokeColor: "transparent"
-                            PathSvg { path: "M 24 -40 L 0 0 L 24 56 Z" }
-                        }
-                        transform: Scale {
-                            origin.x: 0; origin.y: 0
-                            xScale: bannerContainer.getScale(2)
-                            yScale: bannerContainer.getScale(2)
-                        }
-                    }
-
-                    Shape {
-                        id: t4
-                        preferredRendererType: Shape.GeometryRenderer
-                        ShapePath {
-                            fillColor: Theme.triangleSecondary
-                            strokeWidth: 0
-                            strokeColor: "transparent"
-                            PathSvg { path: "M 0 96 L 0 0 L 24 56 Z" }
-                        }
-                        transform: Scale {
-                            origin.x: 0; origin.y: 0
-                            xScale: bannerContainer.getScale(3)
-                            yScale: bannerContainer.getScale(3)
-                        }
-                    }
-
-                    Shape {
-                        id: t5
-                        preferredRendererType: Shape.GeometryRenderer
-                        ShapePath {
-                            fillColor: Theme.trianglePrimary
-                            strokeWidth: 0
-                            strokeColor: "transparent"
-                            PathSvg { path: "M 0 96 L 0 0 L -48 96 Z" }
-                        }
-                        transform: Scale {
-                            origin.x: 0; origin.y: 0
-                            xScale: bannerContainer.getScale(4)
-                            yScale: bannerContainer.getScale(4)
-                        }
-                    }
-
-                    Shape {
-                        id: t6
-                        preferredRendererType: Shape.GeometryRenderer
-                        ShapePath {
-                            fillColor: Theme.triangleSecondary
-                            strokeWidth: 0
-                            strokeColor: "transparent"
-                            PathSvg { path: "M -48 0 L 0 0 L -48 96 Z" }
-                        }
-                        transform: Scale {
-                            origin.x: 0; origin.y: 0
-                            xScale: bannerContainer.getScale(5)
-                            yScale: bannerContainer.getScale(5)
-                        }
+                Repeater {
+                    model: root.triangles
+                    Triangle {
+                        required property var modelData
+                        path: modelData.path
+                        fill: modelData.fill
                     }
                 }
             }
 
-            GaussianBlur {
-                id: blurItem
-                anchors.fill: trianglesSource
-                source: trianglesSource
-                radius: root.dynamicBlurRadius
-                samples: 24
-                transparentBorder: true
+            Repeater {
+                model: root.triangles
+
+                Item {
+                    id: animatedTriangle
+                    required property int index
+                    required property var modelData
+                    readonly property real pulse: bannerContainer.getScale(index)
+                    anchors.fill: parent
+
+                    transform: Scale {
+                        origin.x: root.triangleOriginX
+                        origin.y: root.triangleOriginY
+                        xScale: animatedTriangle.pulse
+                        yScale: animatedTriangle.pulse
+                    }
+
+                    Item {
+                        anchors.fill: parent
+                        layer.enabled: true
+                        layer.smooth: true
+                        layer.effect: triangleBlur
+
+                        Triangle {
+                            path: animatedTriangle.modelData.path
+                            fill: animatedTriangle.modelData.fill
+                        }
+                    }
+                }
             }
         }
 
