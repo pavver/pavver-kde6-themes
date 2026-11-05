@@ -8,6 +8,7 @@ Item {
     visible: false
 
     property bool standaloneDemo: false
+    property bool authenticationComplete: false
     readonly property string userName: typeof kscreenlocker_userName !== "undefined"
         ? kscreenlocker_userName : "pavver"
     readonly property string userDisplayName: userName
@@ -118,12 +119,17 @@ Item {
         ignoreUnknownSignals: true
 
         function onFailed(kind) {
+            // Stopping authentication after success can still report a failed worker.
+            if (root.authenticationComplete) {
+                return;
+            }
             if (typeof kind === "undefined" || kind === 0) {
                 root.authenticationFailed("Невірний пароль");
             }
         }
 
         function onSucceeded() {
+            root.authenticationComplete = true;
             authenticator.stopAuthenticating();
             root.authenticationSucceeded(authenticator.hadPrompt);
         }
