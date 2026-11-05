@@ -8,7 +8,7 @@ Rectangle {
     // Set by ksplashqml for every startup stage.
     property int stage
 
-    color: Pavver.Theme.screenBackground
+    color: Pavver.Theme.loaderBackground
 
     // The window maps as soon as the flat background is ready, which shortens
     // the black gap left by KWin. The loader follows once it has been compiled.

@@ -1,7 +1,8 @@
-# Pavver boot screen: a pre-rendered loop of LoginLoader on the login background.
-# Keep the colour in step with Theme.screenBackground (#555555).
+# Pavver boot screen: a pre-rendered loop of LoginLoader on the loader background.
+# Keep the colour in step with Theme.loaderBackground (#333333). The frames are
+# blended with it, so render them again after changing it.
 
-BACKGROUND = 85 / 255;
+BACKGROUND = 51 / 255;
 FRAME_COUNT = 100;
 # Plymouth refreshes at 50 Hz, so a frame every three ticks plays the 6 s loop.
 TICKS_PER_FRAME = 3;

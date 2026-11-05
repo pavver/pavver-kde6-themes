@@ -10,6 +10,8 @@ QtObject {
     // Brand and screen
     property color screenBackground: "#555555"
     property color bannerBackground: "#333333"
+    // Behind the loader on every waiting screen, including Plymouth.
+    property color loaderBackground: "#333333"
     property color primary: "#00d2ff"
     property color primaryHover: "#00e5ff"
     property color primaryMuted: "#00b4d8"

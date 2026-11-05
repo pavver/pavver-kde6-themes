@@ -21,7 +21,7 @@ Window {
     height: 1080
     flags: Qt.FramelessWindowHint
     visibility: Window.FullScreen
-    color: Pavver.Theme.screenBackground
+    color: Pavver.Theme.loaderBackground
 
     function findClock() {
         for (let i = 0; i < loader.resources.length; ++i) {
