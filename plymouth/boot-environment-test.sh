@@ -5,6 +5,7 @@
 #
 #   sudo plymouth/boot-environment-test.sh create   # build the test environment
 #   sudo plymouth/boot-environment-test.sh remove   # delete it again
+#   sudo plymouth/boot-environment-test.sh update   # refresh the test environment
 #   sudo plymouth/boot-environment-test.sh apply    # move Plymouth to the main system
 #
 # The test environment shows up in ZFSBootMenu as its own entry. Press Esc during
@@ -20,6 +21,8 @@ readonly MAIN_SNAPSHOT="${SOURCE_DATASET}@pre-plymouth"
 readonly MOUNT_POINT="/mnt/pavver-plymouth-test"
 readonly THEME_DIR="usr/share/plymouth/themes/pavver"
 readonly QUIET_SERVICE="pavver-quiet-shutdown.service"
+readonly SDDM_HANDOFF="pavver-plymouth-handoff.conf"
+readonly SDDM_THEME_DIR="usr/share/sddm/themes/pavver-sddm-theme"
 readonly DRACUT_CONFIG="etc/dracut.conf.d/zfs.conf"
 readonly INITRAMFS="boot/initramfs-linux.img"
 # The cursor would otherwise blink on the console between a compositor and Plymouth.
@@ -85,6 +88,8 @@ install_plymouth_files() {
         "${SOURCE_DIR}"/labels/*.png \
         "${root}/${THEME_DIR}/"
     install -m 644 "${SOURCE_DIR}/${QUIET_SERVICE}" "${root}/etc/systemd/system/"
+    install -d -m 755 "${root}/etc/systemd/system/sddm.service.d"
+    install -m 644 "${SOURCE_DIR}/${SDDM_HANDOFF}" "${root}/etc/systemd/system/sddm.service.d/"
 }
 
 verify_initramfs() {
@@ -176,6 +181,27 @@ If anything goes wrong, reset the machine: the default entry boots as before.
 DONE
 }
 
+update() {
+    local built_theme="${SOURCE_DIR}/../dist/themes/sddm/pavver-sddm-theme"
+
+    require_running_system
+    dataset_exists "${TEST_DATASET}" || die "${TEST_DATASET} does not exist"
+    [[ -f "${built_theme}/Main.qml" ]] || die "run scripts/build.sh first"
+
+    trap unmount_test EXIT
+    mount_test
+
+    install_plymouth_files "${MOUNT_POINT}"
+    rm -rf -- "${MOUNT_POINT:?}/${SDDM_THEME_DIR}"
+    cp -r --no-preserve=ownership -- "${built_theme}" "${MOUNT_POINT}/${SDDM_THEME_DIR}"
+    in_test dracut --force --no-hostonly-cmdline "/${INITRAMFS}" --kver "$(uname -r)"
+    verify_initramfs "${MOUNT_POINT}/${INITRAMFS}"
+
+    unmount_test
+    trap - EXIT
+    echo "Updated ${TEST_DATASET}. To test: reboot, press Esc in ZFSBootMenu, pick it."
+}
+
 apply() {
     local kernel_version command_line
 
@@ -231,9 +257,10 @@ remove() {
 case "${1:-}" in
     create) create ;;
     remove) remove ;;
+    update) update ;;
     apply) apply ;;
     *)
-        echo "Usage: sudo $0 create|remove|apply" >&2
+        echo "Usage: sudo $0 create|remove|update|apply" >&2
         exit 2
         ;;
 esac

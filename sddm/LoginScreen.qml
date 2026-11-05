@@ -264,6 +264,17 @@ Item {
             }
         }
 
+        Rectangle {
+            anchors.fill: parent
+            color: Pavver.Theme.loaderBackground
+            opacity: root.isLoggingIn ? 1.0 : 0.0
+            visible: opacity > 0.0
+
+            Behavior on opacity {
+                NumberAnimation { duration: 300 }
+            }
+        }
+
         // Login loader: Cat silhouette on pulsing blurred triangles (Center of screen)
         Pavver.LoginLoader {
             id: catLoader

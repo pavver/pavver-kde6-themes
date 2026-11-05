@@ -104,6 +104,7 @@ else
 fi
 lockscreen_target="${data_root}/plasma/shells/pavver-plasma-lockscreen"
 readonly quiet_service="pavver-quiet-shutdown.service"
+readonly sddm_handoff="sddm.service.d/pavver-plymouth-handoff.conf"
 
 is_selected() {
     [[ "${component}" == "all" || "${component}" == "$1" ]]
@@ -211,7 +212,7 @@ if is_selected plymouth; then
             "${work_dir}/dist/themes/plymouth/pavver" \
             "/usr/share/plymouth/themes/pavver" \
             "pavver.plymouth"
-        install -m 644 "${work_dir}/dist/themes/plymouth/${quiet_service}" \
+        install -m 644 "${work_dir}/dist/themes/plymouth/systemd/${quiet_service}" \
             "/etc/systemd/system/${quiet_service}"
     fi
 fi
@@ -284,6 +285,9 @@ fi
 if [[ "${activate}" == true ]] && is_selected plymouth && [[ "${scope}" == "system" ]]; then
     if command -v plymouth-set-default-theme >/dev/null 2>&1; then
         plymouth-set-default-theme pavver
+        install -D -m 644 "${work_dir}/dist/themes/plymouth/systemd/${sddm_handoff}" \
+            "/etc/systemd/system/${sddm_handoff}"
+        systemctl daemon-reload
         systemctl enable "${quiet_service}"
         echo "Activated the Plymouth theme. Rebuild the initramfs and add splash to the kernel command line."
     else

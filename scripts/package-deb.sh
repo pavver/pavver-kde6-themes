@@ -54,7 +54,7 @@ build_component() {
     local summary="$5"
     local details="$6"
     local readme_path="$7"
-    local systemd_unit="${8:-}"
+    local systemd_units="${8:-}"
     local package_root="${work_dir}/${package_name}"
     local installed_size
 
@@ -65,9 +65,9 @@ build_component() {
         "${package_root}/usr/share/doc/${package_name}/copyright"
     install -m 644 "${readme_path}" \
         "${package_root}/usr/share/doc/${package_name}/README.md"
-    if [[ -n "${systemd_unit}" ]]; then
-        install -D -m 644 "${systemd_unit}" \
-            "${package_root}/usr/lib/systemd/system/$(basename "${systemd_unit}")"
+    if [[ -n "${systemd_units}" ]]; then
+        install -d -m 755 "${package_root}/usr/lib/systemd/system"
+        cp -a -- "${systemd_units}/." "${package_root}/usr/lib/systemd/system/"
     fi
 
     installed_size="$(du -sk "${package_root}" | awk '{ print $1 }')"
@@ -136,9 +136,9 @@ build_component \
     /usr/share/plymouth/themes/pavver \
     'plymouth' \
     'Pavver boot and shutdown screen for Plymouth' \
-    'Installs a Plymouth theme and a service that keeps shutdown messages off the console.' \
+    'Installs a Plymouth theme, a service that keeps shutdown messages off the console, and a smooth handoff to SDDM.' \
     "${ROOT_DIR}/plymouth/README.md" \
-    "${work_dir}/dist/themes/plymouth/pavver-quiet-shutdown.service"
+    "${work_dir}/dist/themes/plymouth/systemd"
 
 meta_root="${work_dir}/pavver-kde6-themes"
 mkdir -p -- "${meta_root}/DEBIAN" "${meta_root}/usr/share/doc/pavver-kde6-themes"

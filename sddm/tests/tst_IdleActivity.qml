@@ -7,7 +7,7 @@ Item {
     width: 1280
     height: 720
 
-    SddmTheme.Main {
+    SddmTheme.LoginScreen {
         id: theme
         anchors.fill: parent
         screensaverIdleInterval: 1000

@@ -176,6 +176,7 @@ if is_selected plymouth; then
         echo "Skipping Plymouth in user scope."
     else
         quiet_unit="/etc/systemd/system/pavver-quiet-shutdown.service"
+        sddm_dropins="/etc/systemd/system/sddm.service.d"
         refuse_if_managed /usr/share/plymouth/themes/pavver/pavver.plymouth
         if command -v plymouth-set-default-theme >/dev/null 2>&1 \
             && [[ "$(plymouth-set-default-theme)" == "pavver" ]]; then
@@ -186,9 +187,14 @@ if is_selected plymouth; then
         if [[ -f "${quiet_unit}" ]]; then
             systemctl disable "$(basename "${quiet_unit}")"
             rm -f -- "${quiet_unit}"
-            systemctl daemon-reload
             echo "Removed the quiet shutdown service."
         fi
+        if [[ -f "${sddm_dropins}/pavver-plymouth-handoff.conf" ]]; then
+            rm -f -- "${sddm_dropins}/pavver-plymouth-handoff.conf"
+            rmdir --ignore-fail-on-non-empty -- "${sddm_dropins}"
+            echo "Removed the SDDM handoff."
+        fi
+        systemctl daemon-reload
     fi
 fi
 

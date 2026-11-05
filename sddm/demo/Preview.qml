@@ -11,7 +11,7 @@ Window {
     visible: true
     title: "Pavver SDDM screensaver preview"
 
-    SddmTheme.Main {
+    SddmTheme.LoginScreen {
         anchors.fill: parent
         screensaverIdleInterval: 2000
     }

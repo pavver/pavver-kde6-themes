@@ -86,8 +86,9 @@ package_pavver-plymouth() {
   install -d "${pkgdir}/usr/share/plymouth/themes"
   cp -a "${srcdir}/pavver-dist/themes/plymouth/pavver" \
     "${pkgdir}/usr/share/plymouth/themes/"
-  install -Dm644 "${srcdir}/pavver-dist/themes/plymouth/pavver-quiet-shutdown.service" \
-    "${pkgdir}/usr/lib/systemd/system/pavver-quiet-shutdown.service"
+  install -d "${pkgdir}/usr/lib/systemd/system"
+  cp -a "${srcdir}/pavver-dist/themes/plymouth/systemd/." \
+    "${pkgdir}/usr/lib/systemd/system/"
   install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
     "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
   install -Dm644 "${srcdir}/${_project}-${pkgver}/plymouth/README.md" \

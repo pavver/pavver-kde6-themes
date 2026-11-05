@@ -77,7 +77,7 @@ sudo ./install.sh
 1. Скопіюйте каталог теми до системної директорії SDDM:
    ```bash
    sudo install -d -m 755 /usr/share/sddm/themes/pavver-sddm-theme
-   sudo cp -RL Main.qml SddmBackend.qml metadata.desktop theme.conf preview.png PavverTheme /usr/share/sddm/themes/pavver-sddm-theme/
+   sudo cp -RL Main.qml LoginScreen.qml SddmBackend.qml metadata.desktop theme.conf preview.png PavverTheme /usr/share/sddm/themes/pavver-sddm-theme/
    sudo find /usr/share/sddm/themes/pavver-sddm-theme -type d -exec chmod 755 {} +
    sudo find /usr/share/sddm/themes/pavver-sddm-theme -type f -exec chmod 644 {} +
    ```
@@ -117,7 +117,8 @@ qml6 demo/Preview.qml
 
 ```
 pavver-sddm-theme/
-├── Main.qml                  # Композиція SDDM та адаптивна геометрія
+├── Main.qml                  # Плоский фон, поки завантажується екран входу
+├── LoginScreen.qml           # Композиція SDDM та адаптивна геометрія
 ├── SddmBackend.qml           # Адаптер sddm/userModel/sessionModel/keyboard
 ├── demo/Preview.qml          # Демонстраційний тест скрінсейвера без SDDM
 ├── PavverTheme -> ../shared/PavverTheme # Спільний інтерфейс під час розробки

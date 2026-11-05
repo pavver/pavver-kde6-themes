@@ -92,7 +92,7 @@ def main() -> int:
     plymouth = dist / "themes/plymouth/pavver"
 
     require_files(sddm, [
-        "Main.qml", "SddmBackend.qml", "metadata.desktop", "theme.conf",
+        "Main.qml", "LoginScreen.qml", "SddmBackend.qml", "metadata.desktop", "theme.conf",
         "preview.png", "LICENSE", "PavverTheme/qmldir",
     ])
     require_files(lockscreen, [
@@ -121,7 +121,9 @@ def main() -> int:
         "label-boot.png", "label-shutdown.png", "label-reboot.png",
         *[f"frame-{index}.png" for index in range(PLYMOUTH_FRAMES)],
     ])
-    require_files(dist / "themes/plymouth", ["pavver-quiet-shutdown.service"])
+    require_files(dist / "themes/plymouth/systemd", [
+        "pavver-quiet-shutdown.service", "sddm.service.d/pavver-plymouth-handoff.conf",
+    ])
     require_text(plymouth / "pavver.script", [f"FRAME_COUNT = {PLYMOUTH_FRAMES};"])
 
     plymouth_theme = configparser.ConfigParser(interpolation=None)

@@ -42,6 +42,7 @@ for required_path in \
     LICENSE \
     shared/PavverTheme/qmldir \
     sddm/Main.qml \
+    sddm/LoginScreen.qml \
     sddm/SddmBackend.qml \
     sddm/metadata.desktop \
     sddm/theme.conf \
@@ -65,6 +66,7 @@ for required_path in \
     plymouth/pavver.plymouth \
     plymouth/pavver.script \
     plymouth/pavver-quiet-shutdown.service \
+    plymouth/pavver-plymouth-handoff.conf \
     plymouth/frames/frame-99.png \
     plymouth/labels/label-boot.png; do
     [[ -e "${ROOT_DIR}/${required_path}" ]] || {
@@ -113,6 +115,7 @@ mkdir -p -- "${sddm_target}" "${lock_target}" "${wallpaper_target}" "${splash_ta
     "${plymouth_target}"
 
 install -m 644 "${ROOT_DIR}/sddm/Main.qml" "${sddm_target}/Main.qml"
+install -m 644 "${ROOT_DIR}/sddm/LoginScreen.qml" "${sddm_target}/LoginScreen.qml"
 install -m 644 "${ROOT_DIR}/sddm/SddmBackend.qml" "${sddm_target}/SddmBackend.qml"
 install -m 644 "${ROOT_DIR}/sddm/metadata.desktop" "${sddm_target}/metadata.desktop"
 install -m 644 "${ROOT_DIR}/sddm/theme.conf" "${sddm_target}/theme.conf"
@@ -154,8 +157,11 @@ install -m 644 \
     "${ROOT_DIR}"/plymouth/labels/*.png \
     "${ROOT_DIR}/LICENSE" \
     "${plymouth_target}/"
-install -m 644 "${ROOT_DIR}/plymouth/pavver-quiet-shutdown.service" \
-    "${staging_dir}/themes/plymouth/pavver-quiet-shutdown.service"
+plymouth_units="${staging_dir}/themes/plymouth/systemd"
+mkdir -p -- "${plymouth_units}/sddm.service.d"
+install -m 644 "${ROOT_DIR}/plymouth/pavver-quiet-shutdown.service" "${plymouth_units}/"
+install -m 644 "${ROOT_DIR}/plymouth/pavver-plymouth-handoff.conf" \
+    "${plymouth_units}/sddm.service.d/"
 
 find "${staging_dir}" -type d -exec chmod 755 {} +
 find "${staging_dir}" -type f -exec chmod 644 {} +
