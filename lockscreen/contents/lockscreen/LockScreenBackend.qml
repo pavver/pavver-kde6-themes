@@ -124,6 +124,7 @@ Item {
         }
 
         function onSucceeded() {
+            authenticator.stopAuthenticating();
             root.authenticationSucceeded(authenticator.hadPrompt);
         }
 
