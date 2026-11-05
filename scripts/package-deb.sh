@@ -116,6 +116,15 @@ build_component \
     'Installs a configurable animated wallpaper visible in Desktop settings.' \
     "${ROOT_DIR}/wallpaper/README.md"
 
+build_component \
+    pavver-splash \
+    "${work_dir}/dist/themes/splash/pavver-splash" \
+    /usr/share/plasma/look-and-feel/pavver-splash \
+    'plasma-workspace (>= 6.0), qml6-module-qtquick, qml6-module-qtquick-window, qml6-module-qtquick-shapes, qml6-module-qt5compat-graphicaleffects' \
+    'Pavver startup splash screen for Plasma 6' \
+    'Installs a startup splash screen visible in Splash Screen settings.' \
+    "${ROOT_DIR}/splash/README.md"
+
 meta_root="${work_dir}/pavver-kde6-themes"
 mkdir -p -- "${meta_root}/DEBIAN" "${meta_root}/usr/share/doc/pavver-kde6-themes"
 install -m 644 "${ROOT_DIR}/LICENSE" "${meta_root}/usr/share/doc/pavver-kde6-themes/copyright"
@@ -128,12 +137,12 @@ install -m 644 "${ROOT_DIR}/README.md" "${meta_root}/usr/share/doc/pavver-kde6-t
     printf 'Architecture: all\n'
     printf 'Multi-Arch: foreign\n'
     printf 'Maintainer: pavver <pavvers1@gmail.com>\n'
-    printf 'Depends: pavver-sddm-theme (= %s), pavver-plasma-lockscreen (= %s), pavver-wallpaper (= %s)\n' \
-        "${VERSION}" "${VERSION}" "${VERSION}"
+    printf 'Depends: pavver-sddm-theme (= %s), pavver-plasma-lockscreen (= %s), pavver-wallpaper (= %s), pavver-splash (= %s)\n' \
+        "${VERSION}" "${VERSION}" "${VERSION}" "${VERSION}"
     printf 'Installed-Size: 1\n'
     printf 'Homepage: https://github.com/pavver/pavver-kde6-themes\n'
     printf 'Description: Complete Pavver visual theme family for KDE Plasma 6\n'
-    printf ' Pulls in the SDDM, lock screen, and animated wallpaper packages.\n'
+    printf ' Pulls in the SDDM, lock screen, animated wallpaper, and splash packages.\n'
 } > "${meta_root}/DEBIAN/control"
 find "${meta_root}" -type d -exec chmod 755 {} +
 find "${meta_root}" -type f -exec chmod 644 {} +

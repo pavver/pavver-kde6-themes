@@ -13,7 +13,7 @@ usage() {
     cat <<'EOF'
 Usage: scripts/build.sh [--output DIR]
 
-Builds standalone SDDM, lock screen, and wallpaper packages.
+Builds standalone SDDM, lock screen, wallpaper, and splash packages.
 EOF
 }
 
@@ -58,7 +58,10 @@ for required_path in \
     wallpaper/metadata.json \
     wallpaper/contents/ui/main.qml \
     wallpaper/contents/ui/config.qml \
-    wallpaper/contents/config/main.xml; do
+    wallpaper/contents/config/main.xml \
+    splash/metadata.json \
+    splash/contents/splash/Splash.qml \
+    splash/contents/previews/splash.png; do
     [[ -e "${ROOT_DIR}/${required_path}" ]] || {
         echo "Missing required source path: ${required_path}" >&2
         exit 1
@@ -98,8 +101,9 @@ trap cleanup EXIT
 sddm_target="${staging_dir}/themes/sddm/pavver-sddm-theme"
 lock_target="${staging_dir}/themes/lockscreen/pavver-plasma-lockscreen"
 wallpaper_target="${staging_dir}/themes/wallpaper/pavver-wallpaper"
+splash_target="${staging_dir}/themes/splash/pavver-splash"
 
-mkdir -p -- "${sddm_target}" "${lock_target}" "${wallpaper_target}"
+mkdir -p -- "${sddm_target}" "${lock_target}" "${wallpaper_target}" "${splash_target}"
 
 install -m 644 "${ROOT_DIR}/sddm/Main.qml" "${sddm_target}/Main.qml"
 install -m 644 "${ROOT_DIR}/sddm/SddmBackend.qml" "${sddm_target}/SddmBackend.qml"
@@ -130,6 +134,11 @@ install -m 644 "${ROOT_DIR}/lockscreen/preview_screensaver.png" "${wallpaper_tar
 install -m 644 "${ROOT_DIR}/LICENSE" "${wallpaper_target}/LICENSE"
 cp -a -- "${ROOT_DIR}/wallpaper/contents" "${wallpaper_target}/contents"
 cp -a -- "${SHARED_DIR}" "${wallpaper_target}/contents/ui/PavverTheme"
+
+install -m 644 "${ROOT_DIR}/splash/metadata.json" "${splash_target}/metadata.json"
+install -m 644 "${ROOT_DIR}/LICENSE" "${splash_target}/LICENSE"
+cp -a -- "${ROOT_DIR}/splash/contents" "${splash_target}/contents"
+cp -a -- "${SHARED_DIR}" "${splash_target}/contents/splash/PavverTheme"
 
 find "${staging_dir}" -type d -exec chmod 755 {} +
 find "${staging_dir}" -type f -exec chmod 644 {} +

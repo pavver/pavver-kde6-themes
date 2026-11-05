@@ -4,6 +4,7 @@ pkgname=(
   pavver-sddm-theme
   pavver-plasma-lockscreen
   pavver-wallpaper
+  pavver-splash
   pavver-kde6-themes
 )
 pkgver=1.0.0
@@ -64,12 +65,26 @@ package_pavver-wallpaper() {
     "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }
 
+package_pavver-splash() {
+  pkgdesc='Pavver startup splash screen for Plasma 6'
+  depends=('plasma-workspace>=6.0' 'qt6-declarative' 'qt6-5compat')
+
+  install -d "${pkgdir}/usr/share/plasma/look-and-feel"
+  cp -a "${srcdir}/pavver-dist/themes/splash/pavver-splash" \
+    "${pkgdir}/usr/share/plasma/look-and-feel/"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/splash/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
+
 package_pavver-kde6-themes() {
   pkgdesc='Complete Pavver visual theme family for KDE Plasma 6'
   depends=(
     "pavver-sddm-theme=${pkgver}-${pkgrel}"
     "pavver-plasma-lockscreen=${pkgver}-${pkgrel}"
     "pavver-wallpaper=${pkgver}-${pkgrel}"
+    "pavver-splash=${pkgver}-${pkgrel}"
   )
 
   install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \

@@ -1,0 +1,20 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "pavvers1@gmail.com",
+                "Name": "pavver"
+            }
+        ],
+        "Category": "Appearance",
+        "Description": "Pavver startup splash screen for KDE Plasma 6",
+        "Icon": "preferences-desktop-theme",
+        "Id": "pavver-splash",
+        "License": "GPL-3.0-or-later",
+        "Name": "Pavver Splash",
+        "Version": "1.0.0",
+        "Website": "https://github.com/pavver/pavver-kde6-themes"
+    },
+    "X-Plasma-APIVersion": "2"
+}

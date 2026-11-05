@@ -9,7 +9,7 @@ usage() {
     cat <<'EOF'
 Usage: ./uninstall.sh [--user|--system] [--component NAME]
 
-Components: all, sddm, lockscreen, wallpaper
+Components: all, sddm, lockscreen, wallpaper, splash
 Use the distribution package manager instead when the files are package-managed.
 EOF
 }
@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${component}" in
-    all|sddm|lockscreen|wallpaper) ;;
+    all|sddm|lockscreen|wallpaper|splash) ;;
     *)
         echo "Unknown component: ${component}" >&2
         exit 2
@@ -153,6 +153,17 @@ if is_selected lockscreen; then
                 --key ShellPackage "org.kde.plasma.desktop" --notify
             echo "Restored plasmashellrc ShellPackage to org.kde.plasma.desktop."
         fi
+    fi
+fi
+
+if is_selected splash; then
+    remove_tree "${data_root}/plasma/look-and-feel/pavver-splash" metadata.json
+    if [[ "${scope}" == "user" ]] && command -v kreadconfig6 >/dev/null 2>&1 \
+        && command -v kwriteconfig6 >/dev/null 2>&1 \
+        && [[ "$(kreadconfig6 --file ksplashrc --group KSplash --key Theme)" == "pavver-splash" ]]; then
+        kwriteconfig6 --file ksplashrc --group KSplash --key Theme --delete
+        kwriteconfig6 --file ksplashrc --group KSplash --key Engine --delete
+        echo "Restored the default splash screen."
     fi
 fi
 

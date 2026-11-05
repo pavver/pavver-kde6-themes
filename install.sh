@@ -13,10 +13,10 @@ usage() {
     cat <<'EOF'
 Usage: ./install.sh [--user|--system] [--component NAME] [--activate]
 
-Components: all, sddm, lockscreen, wallpaper
+Components: all, sddm, lockscreen, wallpaper, splash
 
 Without --activate, files are installed but no current theme setting is changed.
-User scope installs lockscreen and wallpaper. SDDM requires system scope.
+User scope installs lockscreen, wallpaper, and splash. SDDM requires system scope.
 EOF
 }
 
@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${component}" in
-    all|sddm|lockscreen|wallpaper) ;;
+    all|sddm|lockscreen|wallpaper|splash) ;;
     *)
         echo "Unknown component: ${component}" >&2
         exit 2
@@ -191,6 +191,13 @@ if is_selected wallpaper; then
         "metadata.json"
 fi
 
+if is_selected splash; then
+    install_tree \
+        "${work_dir}/dist/themes/splash/pavver-splash" \
+        "${data_root}/plasma/look-and-feel/pavver-splash" \
+        "metadata.json"
+fi
+
 if [[ "${activate}" == true ]]; then
     if is_selected sddm && [[ "${scope}" == "system" ]]; then
         install -d -m 755 /etc/sddm.conf.d
@@ -242,8 +249,25 @@ if [[ "${activate}" == true ]]; then
     fi
 fi
 
+if [[ "${activate}" == true ]] && is_selected splash; then
+    if [[ "${scope}" == "user" ]]; then
+        command -v kwriteconfig6 >/dev/null 2>&1 || {
+            echo "kwriteconfig6 is required to activate the splash screen." >&2
+            exit 1
+        }
+        kwriteconfig6 --file ksplashrc --group KSplash --key Engine KSplashQML
+        kwriteconfig6 --file ksplashrc --group KSplash --key Theme pavver-splash
+        echo "Activated the splash screen for the next login."
+    else
+        echo "The splash screen is selected per user. Run: ./install.sh --user --component splash --activate"
+    fi
+fi
+
 if is_selected wallpaper; then
     echo "Select 'Pavver Animated Wallpaper' in Desktop and Wallpaper settings."
+fi
+if is_selected splash && [[ "${activate}" == false ]]; then
+    echo "Select 'Pavver Splash' in Splash Screen settings, or run: ./install.sh --user --component splash --activate"
 fi
 if is_selected sddm && [[ "${scope}" == "system" && "${activate}" == false ]]; then
     echo "Select 'Pavver SDDM Theme' in Login Screen settings, or rerun with --activate."

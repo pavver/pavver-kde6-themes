@@ -27,7 +27,8 @@ pavver-kde6-themes/
 │   └── fonts/
 ├── sddm/                     # Тема й адаптер SDDM для Qt 6
 ├── lockscreen/               # Тема й адаптер KScreenLocker для Plasma 6
-└── wallpaper/                # Нативний плагін Plasma/Wallpaper
+├── wallpaper/                # Нативний плагін Plasma/Wallpaper
+└── splash/                   # Заставка запуску Plasma
 ```
 
 Елементи `PavverTheme` усередині цільових каталогів є відносними симлінками для розробки.
@@ -102,7 +103,8 @@ sudo ./install.sh --system --component sddm --activate
 sudo ./install.sh --system --component lockscreen --activate
 ```
 
-Встановлення для користувача додає пакет екрана блокування та шпалери.
+Встановлення для користувача додає пакет екрана блокування, шпалери та заставку запуску.
+Заставка вибирається окремо для кожного користувача: `./install.sh --user --component splash --activate`.
 SDDM та системна заміна екрана блокування встановлюються із `--system`.
 Інсталятори окремих компонентів залишаються сумісними обгортками над головним інсталятором.
 

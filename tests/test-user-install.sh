@@ -24,11 +24,27 @@ export PATH="${test_home}/bin:${PATH}"
 "${ROOT_DIR}/install.sh" --user
 test -f "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen/metadata.json"
 test -f "${XDG_DATA_HOME}/plasma/wallpapers/pavver-wallpaper/metadata.json"
+test -f "${XDG_DATA_HOME}/plasma/look-and-feel/pavver-splash/metadata.json"
+test -z "$(kreadconfig6 --file ksplashrc --group KSplash --key Theme)"
 test ! -e "${XDG_DATA_HOME}/sddm"
 
 "${ROOT_DIR}/uninstall.sh" --user
 test ! -e "${XDG_DATA_HOME}/plasma/shells/pavver-plasma-lockscreen"
 test ! -e "${XDG_DATA_HOME}/plasma/wallpapers/pavver-wallpaper"
+test ! -e "${XDG_DATA_HOME}/plasma/look-and-feel/pavver-splash"
+
+"${ROOT_DIR}/install.sh" --user --component splash --activate
+test "$(kreadconfig6 --file ksplashrc --group KSplash --key Theme)" = "pavver-splash"
+test "$(kreadconfig6 --file ksplashrc --group KSplash --key Engine)" = "KSplashQML"
+
+"${ROOT_DIR}/uninstall.sh" --user --component splash
+test ! -e "${XDG_DATA_HOME}/plasma/look-and-feel/pavver-splash"
+test -z "$(kreadconfig6 --file ksplashrc --group KSplash --key Theme)"
+
+kwriteconfig6 --file ksplashrc --group KSplash --key Theme example.custom.splash
+"${ROOT_DIR}/install.sh" --user --component splash
+"${ROOT_DIR}/uninstall.sh" --user --component splash
+test "$(kreadconfig6 --file ksplashrc --group KSplash --key Theme)" = "example.custom.splash"
 
 kwriteconfig6 --file plasmashellrc --group Shell \
     --key ShellPackage pavver-plasma-lockscreen

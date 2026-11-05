@@ -51,7 +51,8 @@ if [[ -n "${scanner}" ]]; then
     for qml_root in \
         "${dist_dir}/themes/sddm/pavver-sddm-theme" \
         "${dist_dir}/themes/lockscreen/pavver-plasma-lockscreen" \
-        "${dist_dir}/themes/wallpaper/pavver-wallpaper"; do
+        "${dist_dir}/themes/wallpaper/pavver-wallpaper" \
+        "${dist_dir}/themes/splash/pavver-splash"; do
         "${scanner}" -rootPath "${qml_root}" >/dev/null
     done
     echo "QML import scan passed"
@@ -75,6 +76,10 @@ if command -v kpackagetool6 >/dev/null 2>&1; then
     XDG_CACHE_HOME="${kpackage_tmp}/cache" \
         kpackagetool6 --type Plasma/Wallpaper --install \
         "${dist_dir}/themes/wallpaper/pavver-wallpaper" >/dev/null
+    XDG_DATA_HOME="${kpackage_tmp}/data" \
+    XDG_CACHE_HOME="${kpackage_tmp}/cache" \
+        kpackagetool6 --type Plasma/LookAndFeel --install \
+        "${dist_dir}/themes/splash/pavver-splash" >/dev/null
 
     echo "KPackage installation validation passed"
 else

@@ -7,6 +7,7 @@ group=""
 key=""
 default_value=""
 value=""
+delete=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -27,6 +28,10 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --notify)
+            shift
+            ;;
+        --delete)
+            delete=true
             shift
             ;;
         *)
@@ -50,7 +55,11 @@ case "$(basename "$0")" in
         ;;
     kwriteconfig6)
         mkdir -p -- "${config_dir}"
-        printf '%s\n' "${value}" > "${config_path}"
+        if [[ "${delete}" == true ]]; then
+            rm -f -- "${config_path}"
+        else
+            printf '%s\n' "${value}" > "${config_path}"
+        fi
         ;;
     *)
         echo "Unsupported KConfig mock command: $0" >&2

@@ -85,6 +85,7 @@ def main() -> int:
     sddm = dist / "themes/sddm/pavver-sddm-theme"
     lockscreen = dist / "themes/lockscreen/pavver-plasma-lockscreen"
     wallpaper = dist / "themes/wallpaper/pavver-wallpaper"
+    splash = dist / "themes/splash/pavver-splash"
 
     require_files(sddm, [
         "Main.qml", "SddmBackend.qml", "metadata.desktop", "theme.conf",
@@ -106,6 +107,19 @@ def main() -> int:
         "contents/ui/main.qml", "contents/ui/config.qml",
         "contents/config/main.xml", "contents/ui/PavverTheme/qmldir",
     ])
+    require_files(splash, [
+        "metadata.json", "LICENSE", "contents/splash/Splash.qml",
+        "contents/previews/splash.png", "contents/splash/PavverTheme/qmldir",
+    ])
+
+    splash_metadata = load_json(splash / "metadata.json")
+    if splash_metadata.get("KPackageStructure") != "Plasma/LookAndFeel":
+        fail("Splash must use KPackageStructure Plasma/LookAndFeel")
+    splash_plugin = splash_metadata.get("KPlugin", {})
+    if splash_plugin.get("Id") != "pavver-splash":
+        fail("Unexpected splash plugin Id")
+    if splash_plugin.get("Version") != version:
+        fail("Splash metadata version does not match VERSION")
 
     lock_metadata = load_json(lockscreen / "metadata.json")
     if lock_metadata.get("KPackageStructure") != "Plasma/Shell":
@@ -167,6 +181,7 @@ def main() -> int:
         sddm / "PavverTheme",
         lockscreen / "contents/lockscreen/PavverTheme",
         wallpaper / "contents/ui/PavverTheme",
+        splash / "contents/splash/PavverTheme",
     ]
     for target in shared_targets:
         if tree_hashes(target) != source_hashes:
@@ -179,6 +194,7 @@ def main() -> int:
         lockscreen / "preview_screensaver.png",
         lockscreen / "preview_capslock.png",
         wallpaper / "preview.png",
+        splash / "contents/previews/splash.png",
     ]:
         width, height = png_size(preview)
         if width < 640 or height < 360:

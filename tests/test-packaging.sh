@@ -28,6 +28,10 @@ cmp \
     "${ROOT_DIR}/shared/PavverTheme/Theme.qml" \
     "${test_dir}/dist/themes/wallpaper/pavver-wallpaper/contents/ui/PavverTheme/Theme.qml"
 
+cmp \
+    "${ROOT_DIR}/shared/PavverTheme/Theme.qml" \
+    "${test_dir}/dist/themes/splash/pavver-splash/contents/splash/PavverTheme/Theme.qml"
+
 if find "${test_dir}/dist" -type l -print -quit | grep -q .; then
     echo "Release output contains a symlink" >&2
     exit 1
