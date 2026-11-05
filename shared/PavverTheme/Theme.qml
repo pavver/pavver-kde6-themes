@@ -13,6 +13,7 @@ QtObject {
     property color primary: "#00d2ff"
     property color primaryHover: "#00e5ff"
     property color primaryMuted: "#00b4d8"
+    property color pending: "#e3b341"
     property color success: "#00e676"
     property color error: "#ff3366"
     property color errorSoft: "#ff4d6d"
@@ -91,6 +92,9 @@ QtObject {
     property int tooltipDelay: 350
     property int slowAnimation: 400
     property int sceneAnimation: 550
-    property int authenticationPulseDuration: 250
+    property int pendingBorderCycle: 2000
+    property int statusPulseHalfCycle: 400
+    property int statusHoldDuration: 800
+    property int statusExitFade: 500
     property int statusTimeout: 4000
 }

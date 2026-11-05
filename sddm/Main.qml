@@ -257,9 +257,9 @@ Item {
                         virtualKeyboard.hide()
                         root.isScreensaverMode = false
                         root.ignoreScreensaverWakeup = false
-                        root.isLoggingIn = true
                         backend.authenticate(username, password, sessionIndex)
                     }
+                    onAuthenticationSuccessFinished: root.isLoggingIn = true
                 }
             }
         }
@@ -293,7 +293,7 @@ Item {
         function onAuthenticationSucceeded() {
             virtualKeyboard.hide()
             compactLoginCard.closePopups()
-            root.isLoggingIn = true
+            compactLoginCard.authenticationSucceeded()
         }
     }
 }

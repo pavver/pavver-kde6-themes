@@ -134,7 +134,7 @@ Window {
                         authenticationFailed("Невірний пароль")
                     } else {
                         showStatusMessage("Демо-вхід виконано", "success")
-                        inputFeedbackState = "idle"
+                        cancelPendingAuthentication()
                     }
                 }
             }

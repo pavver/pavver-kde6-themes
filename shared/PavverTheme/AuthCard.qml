@@ -235,7 +235,7 @@ Item {
     property bool canReboot: false
     property bool canPowerOff: false
     readonly property bool effectiveAuthenticationBlocked: authenticationBlocked
-        || inputFeedbackState !== "idle"
+        || inputFeedbackState === "pending" || inputFeedbackState === "success"
     readonly property bool canSubmitLogin: currentUserName.length > 0
         && passwordInput.text.length > 0 && !effectiveAuthenticationBlocked
     readonly property bool userChooserAvailable: (allowUserSelection && userCount > 0)
@@ -243,6 +243,8 @@ Item {
     readonly property bool hasOpenPopup: userDropdown.visible || sessionDropdown.visible
 
     signal authenticationRequested(string username, string password, int sessionIndex)
+    signal authenticationSuccessFinished()
+    signal authenticationTimedOut()
     signal keyboardLayoutRequested(int index)
     signal suspendRequested()
     signal rebootRequested()
@@ -251,9 +253,12 @@ Item {
     signal passwordlessAuthenticationRequested()
     signal userActivity()
 
-    property string inputFeedbackState: "idle" // "idle", "success", "error"
+    property string inputFeedbackState: "idle" // "idle", "pending", "success", "error"
     property real pulseAlpha: 1.0
-    property real pulseBorderWidth: 1.5
+    property real statusVisibility: 0.0
+    property color statusColor: "transparent"
+    readonly property var fastOutSlowIn: [0.4, 0.0, 0.2, 1.0, 1.0, 1.0]
+    readonly property var smoothstep: [1.0 / 3.0, 0.0, 2.0 / 3.0, 1.0, 1.0, 1.0]
     property string statusMessage: ""
     property string statusType: "info"
     readonly property string displayedStatusMessage: statusMessage || authenticationHint
@@ -339,30 +344,45 @@ Item {
         onTriggered: root.clearStatusMessage()
     }
 
-    // Success animation: pulse vibrant green border for 500ms, then trigger loader transition
+    Timer {
+        id: authenticationResponseTimer
+        interval: 30000
+        repeat: false
+        onTriggered: {
+            root.authenticationFailed("Немає відповіді від системи автентифікації");
+            root.authenticationTimedOut();
+        }
+    }
+
+    // Result pulse: 2x stroke with alpha between 0.55 and 1.0 for as long as the result is visible.
     SequentialAnimation {
-        id: successPulseAnim
+        running: root.statusVisibility > 0
+        loops: Animation.Infinite
+        onStopped: root.pulseAlpha = 1.0
+        NumberAnimation {
+            target: root; property: "pulseAlpha"; from: 0.55; to: 1.0
+            duration: Theme.statusPulseHalfCycle
+            easing.type: Easing.Bezier; easing.bezierCurve: root.fastOutSlowIn
+        }
+        NumberAnimation {
+            target: root; property: "pulseAlpha"; from: 1.0; to: 0.55
+            duration: Theme.statusPulseHalfCycle
+            easing.type: Easing.Bezier; easing.bezierCurve: root.fastOutSlowIn
+        }
+    }
+
+    SequentialAnimation {
+        id: successFeedbackAnim
         running: false
         ScriptAction {
             script: {
+                root.statusColor = Theme.success;
+                root.statusVisibility = 1.0;
                 root.inputFeedbackState = "success";
-                root.pulseBorderWidth = 3.0;
-                root.pulseAlpha = 1.0;
             }
         }
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "pulseAlpha"; from: 1.0; to: 0.55; duration: Theme.authenticationPulseDuration; easing.type: Easing.InOutQuad }
-            NumberAnimation { target: root; property: "pulseBorderWidth"; from: 3.0; to: 2.2; duration: Theme.authenticationPulseDuration; easing.type: Easing.InOutQuad }
-        }
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "pulseAlpha"; from: 0.55; to: 1.0; duration: Theme.authenticationPulseDuration; easing.type: Easing.InOutQuad }
-            NumberAnimation { target: root; property: "pulseBorderWidth"; from: 2.2; to: 3.0; duration: Theme.authenticationPulseDuration; easing.type: Easing.InOutQuad }
-        }
-        ScriptAction {
-            script: {
-                root.authenticationRequested(currentUserName, passwordInput.text, currentSessionIndex);
-            }
-        }
+        PauseAnimation { duration: Theme.statusHoldDuration }
+        ScriptAction { script: root.authenticationSuccessFinished() }
     }
 
     function doLogin() {
@@ -372,7 +392,11 @@ Item {
         } else if (passwordInput.text.length > 0) {
             closePopups();
             clearStatusMessage();
-            successPulseAnim.restart();
+            errorFeedbackAnim.stop();
+            statusVisibility = 0.0;
+            inputFeedbackState = "pending";
+            authenticationResponseTimer.restart();
+            authenticationRequested(currentUserName, passwordInput.text, currentSessionIndex);
         }
     }
 
@@ -383,21 +407,20 @@ Item {
         }
     }
 
-    // Error animation: clear text immediately, pulse red border twice with tactile micro-shake, then smooth exit fade
+    // Error feedback: red pulse with a tactile micro-shake, then the exit fade over the idle border.
     SequentialAnimation {
-        id: errorPulseAnim
+        id: errorFeedbackAnim
         running: false
         ScriptAction {
             script: {
                 root.clearPassword();
+                root.statusColor = Theme.error;
+                root.statusVisibility = 1.0;
                 root.inputFeedbackState = "error";
-                root.pulseBorderWidth = 3.0;
-                root.pulseAlpha = 1.0;
                 root.showStatusMessage(root.failureMessage, "error");
                 root.focusPassword();
             }
         }
-        // Pulse 1 + Tactile Micro-shake
         ParallelAnimation {
             SequentialAnimation {
                 NumberAnimation { target: root; property: "x"; to: root.x - 8; duration: 40; easing.type: Easing.InOutQuad }
@@ -406,44 +429,36 @@ Item {
                 NumberAnimation { target: root; property: "x"; to: root.x + 5; duration: 60; easing.type: Easing.InOutQuad }
                 NumberAnimation { target: root; property: "x"; to: root.x; duration: 40; easing.type: Easing.InOutQuad }
             }
-            SequentialAnimation {
-                ParallelAnimation {
-                    NumberAnimation { target: root; property: "pulseAlpha"; from: 1.0; to: 0.55; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-                    NumberAnimation { target: root; property: "pulseBorderWidth"; from: 3.0; to: 2.2; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-                }
-                ParallelAnimation {
-                    NumberAnimation { target: root; property: "pulseAlpha"; from: 0.55; to: 1.0; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-                    NumberAnimation { target: root; property: "pulseBorderWidth"; from: 2.2; to: 3.0; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-                }
-            }
+            PauseAnimation { duration: Theme.statusHoldDuration }
         }
-        // Pulse 2
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "pulseAlpha"; from: 1.0; to: 0.55; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-            NumberAnimation { target: root; property: "pulseBorderWidth"; from: 3.0; to: 2.2; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-        }
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "pulseAlpha"; from: 0.55; to: 1.0; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-            NumberAnimation { target: root; property: "pulseBorderWidth"; from: 2.2; to: 3.0; duration: Theme.feedbackAnimation; easing.type: Easing.InOutQuad }
-        }
-        // Smooth exit fade to idle (400 ms)
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "pulseAlpha"; from: 1.0; to: 0.0; duration: Theme.slowAnimation; easing.type: Easing.InOutQuad }
-            NumberAnimation { target: root; property: "pulseBorderWidth"; from: 3.0; to: 1.5; duration: Theme.slowAnimation; easing.type: Easing.InOutQuad }
-        }
-        ScriptAction {
-            script: {
-                root.inputFeedbackState = "idle";
-                root.pulseAlpha = 1.0;
-                root.pulseBorderWidth = 1.5;
-            }
+        ScriptAction { script: root.inputFeedbackState = "idle" }
+        NumberAnimation {
+            target: root; property: "statusVisibility"; to: 0.0
+            duration: Theme.statusExitFade
+            easing.type: Easing.Bezier; easing.bezierCurve: root.smoothstep
         }
     }
 
     function authenticationFailed(message) {
         failureMessage = message || "Не вдалося виконати автентифікацію";
-        successPulseAnim.stop();
-        errorPulseAnim.restart();
+        authenticationResponseTimer.stop();
+        successFeedbackAnim.stop();
+        errorFeedbackAnim.stop();
+        errorFeedbackAnim.start();
+    }
+
+    function authenticationSucceeded() {
+        authenticationResponseTimer.stop();
+        errorFeedbackAnim.stop();
+        clearStatusMessage();
+        successFeedbackAnim.restart();
+    }
+
+    function cancelPendingAuthentication() {
+        authenticationResponseTimer.stop();
+        if (inputFeedbackState === "pending") {
+            inputFeedbackState = "idle";
+        }
     }
 
     // Base dark grey rectangle (#222222, darker than banner background #333333)
@@ -997,30 +1012,28 @@ Item {
             height: 56
             anchors.bottom: parent.bottom
             radius: Theme.inputRadius
-            color: {
-                if (root.inputFeedbackState === "success") {
-                    return Theme.withAlpha(Theme.success, 0.08 * root.pulseAlpha);
-                } else if (root.inputFeedbackState === "error") {
-                    return Theme.withAlpha(Theme.error, 0.08 * root.pulseAlpha);
-                }
-                return Theme.inputBackground;
-            }
+            color: Theme.inputBackground
             border.color: {
-                if (root.inputFeedbackState === "success") {
-                    return Theme.withAlpha(Theme.success, root.pulseAlpha);
-                } else if (root.inputFeedbackState === "error") {
-                    return Theme.withAlpha(Theme.error, root.pulseAlpha);
-                }
+                if (root.inputFeedbackState === "pending") return "transparent";
                 return passwordInput.activeFocus ? Theme.primary : Theme.borderSoft;
             }
-            border.width: {
-                if (root.inputFeedbackState === "success" || root.inputFeedbackState === "error") {
-                    return root.pulseBorderWidth;
-                }
-                return passwordInput.activeFocus ? 2 : 1.5;
+            border.width: passwordInput.activeFocus ? 2 : 1.5
+
+            // Status layer over the base border, so the exit fade changes only its opacity.
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                visible: root.statusVisibility > 0
+                color: Theme.withAlpha(root.statusColor, 0.08 * root.pulseAlpha * root.statusVisibility)
+                border.width: 3
+                border.color: Theme.withAlpha(root.statusColor, root.pulseAlpha * root.statusVisibility)
             }
 
-            Behavior on color { ColorAnimation { duration: Theme.fastAnimation } }
+            PendingBorder {
+                anchors.fill: parent
+                radius: parent.radius
+                running: root.inputFeedbackState === "pending"
+            }
 
             // Caps Lock Warning Badge (Inside input box on the left)
             Rectangle {
@@ -1112,6 +1125,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                readOnly: root.inputFeedbackState === "pending"
                 onAccepted: root.doLogin()
                 onTextEdited: root.userActivity()
 

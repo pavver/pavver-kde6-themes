@@ -310,14 +310,17 @@ Item {
 
                     onAuthenticationRequested: function(username, password, sessionIndex) {
                         if (lockScreenUi.isScreensaverMode) {
+                            compactLockCard.cancelPendingAuthentication();
                             lockScreenUi.wakeUp();
                             return;
                         }
                         if (graceLockTimer.running) {
+                            compactLockCard.cancelPendingAuthentication();
                             return;
                         }
                         backend.authenticate(password);
                     }
+                    onAuthenticationTimedOut: backend.startAuthenticating()
                 }
 
                 Connections {
@@ -362,10 +365,13 @@ Item {
         }
 
         function onAuthenticationSucceeded(hadPrompt) {
+            graceLockTimer.stop();
             lockScreenUi.clearPassword();
             if (hadPrompt) {
+                compactLockCard.authenticationSucceeded();
                 unlockTimer.start();
             } else {
+                compactLockCard.cancelPendingAuthentication();
                 lockScreenUi.passwordlessConfirmationVisible = true;
                 lockScreenUi.isScreensaverMode = false;
                 Qt.callLater(function() {
@@ -398,7 +404,7 @@ Item {
 
     Timer {
         id: unlockTimer
-        interval: 500
+        interval: Pavver.Theme.statusHoldDuration
         repeat: false
         onTriggered: Qt.quit()
     }
