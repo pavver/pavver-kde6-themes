@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep shutdown wall messages off the console before the Plymouth screen
+After=systemd-logind.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager SetWallMessage sb "" false
+
+[Install]
+WantedBy=multi-user.target

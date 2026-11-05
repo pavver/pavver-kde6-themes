@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Pavver
+Description=Pavver boot and shutdown screen
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/pavver
+ScriptFile=/usr/share/plymouth/themes/pavver/pavver.script

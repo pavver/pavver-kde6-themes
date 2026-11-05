@@ -9,7 +9,7 @@ usage() {
     cat <<'EOF'
 Usage: ./uninstall.sh [--user|--system] [--component NAME]
 
-Components: all, sddm, lockscreen, wallpaper, splash
+Components: all, sddm, lockscreen, wallpaper, splash, plymouth
 Use the distribution package manager instead when the files are package-managed.
 EOF
 }
@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${component}" in
-    all|sddm|lockscreen|wallpaper|splash) ;;
+    all|sddm|lockscreen|wallpaper|splash|plymouth) ;;
     *)
         echo "Unknown component: ${component}" >&2
         exit 2
@@ -66,6 +66,10 @@ if [[ "${scope}" == "user" && ( -z "${HOME:-}" || "${HOME}" == "/" ) ]]; then
 fi
 if [[ "${scope}" == "user" && "${component}" == "sddm" ]]; then
     echo "SDDM can only be removed with --system." >&2
+    exit 1
+fi
+if [[ "${scope}" == "user" && "${component}" == "plymouth" ]]; then
+    echo "Plymouth can only be removed with --system." >&2
     exit 1
 fi
 
@@ -164,6 +168,27 @@ if is_selected splash; then
         kwriteconfig6 --file ksplashrc --group KSplash --key Theme --delete
         kwriteconfig6 --file ksplashrc --group KSplash --key Engine --delete
         echo "Restored the default splash screen."
+    fi
+fi
+
+if is_selected plymouth; then
+    if [[ "${scope}" == "user" ]]; then
+        echo "Skipping Plymouth in user scope."
+    else
+        quiet_unit="/etc/systemd/system/pavver-quiet-shutdown.service"
+        refuse_if_managed /usr/share/plymouth/themes/pavver/pavver.plymouth
+        if command -v plymouth-set-default-theme >/dev/null 2>&1 \
+            && [[ "$(plymouth-set-default-theme)" == "pavver" ]]; then
+            plymouth-set-default-theme --reset
+            echo "Restored the default Plymouth theme. Rebuild the initramfs to apply it."
+        fi
+        remove_tree /usr/share/plymouth/themes/pavver pavver.plymouth
+        if [[ -f "${quiet_unit}" ]]; then
+            systemctl disable "$(basename "${quiet_unit}")"
+            rm -f -- "${quiet_unit}"
+            systemctl daemon-reload
+            echo "Removed the quiet shutdown service."
+        fi
     fi
 fi
 

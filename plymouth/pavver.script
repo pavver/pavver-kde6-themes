@@ -1,0 +1,144 @@
+# Pavver boot screen: a pre-rendered loop of LoginLoader on the login background.
+# Keep the colour in step with Theme.screenBackground (#555555).
+
+BACKGROUND = 85 / 255;
+FRAME_COUNT = 100;
+# Plymouth refreshes at 50 Hz, so a frame every three ticks plays the 6 s loop.
+TICKS_PER_FRAME = 3;
+# Frames are rendered for a 1080 px screen; LoginLoader follows the smaller side.
+RENDERED_SIDE = 1080;
+# Distance from the screen centre to the top of the caption on that screen.
+LABEL_OFFSET = 440;
+
+Window.SetBackgroundTopColor(BACKGROUND, BACKGROUND, BACKGROUND);
+Window.SetBackgroundBottomColor(BACKGROUND, BACKGROUND, BACKGROUND);
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+loader_scale = Math.Min(screen_width, screen_height) / RENDERED_SIDE;
+
+fun load_frame(index)
+{
+    if (!frames[index])
+    {
+        image = Image("frame-" + index + ".png");
+        if (loader_scale != 1)
+        {
+            image = image.Scale(image.GetWidth() * loader_scale, image.GetHeight() * loader_scale);
+        }
+        frames[index] = image;
+    }
+    return frames[index];
+}
+
+fun show_frame(index)
+{
+    image = load_frame(index);
+    loader.SetImage(image);
+    loader.SetX(Window.GetX() + (screen_width - image.GetWidth()) / 2);
+    loader.SetY(Window.GetY() + (screen_height - image.GetHeight()) / 2);
+}
+
+loader = Sprite();
+loader.SetZ(1);
+tick = 0;
+shown_frame = 0;
+show_frame(0);
+
+fun refresh_callback()
+{
+    tick++;
+    frame = Math.Int(tick / TICKS_PER_FRAME) % FRAME_COUNT;
+    if (frame != shown_frame)
+    {
+        shown_frame = frame;
+        show_frame(frame);
+    }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+# Modes without a label-<mode>.png, such as offline updates, show no caption.
+label_sprite = Sprite();
+label_sprite.SetZ(1);
+label_image = Image("label-" + Plymouth.GetMode() + ".png");
+if (label_image)
+{
+    if (loader_scale != 1)
+    {
+        label_image = label_image.Scale(label_image.GetWidth() * loader_scale, label_image.GetHeight() * loader_scale);
+    }
+    label_sprite.SetImage(label_image);
+    label_sprite.SetX(Window.GetX() + (screen_width - label_image.GetWidth()) / 2);
+    label_sprite.SetY(Window.GetY() + screen_height / 2 + LABEL_OFFSET * loader_scale);
+}
+
+# Prompts stay readable over the loader, so a disk passphrase can never be hidden.
+prompt_sprite = Sprite();
+prompt_sprite.SetZ(10);
+answer_sprite = Sprite();
+answer_sprite.SetZ(10);
+message_sprite = Sprite();
+message_sprite.SetZ(10);
+
+fun place_text(sprite, text, offset)
+{
+    # Prompts and messages use the same strip of the screen as the caption.
+    label_sprite.SetOpacity(0);
+    image = Image.Text(text, 1, 1, 1);
+    sprite.SetImage(image);
+    sprite.SetX(Window.GetX() + (screen_width - image.GetWidth()) / 2);
+    sprite.SetY(Window.GetY() + screen_height - offset);
+    sprite.SetOpacity(1);
+}
+
+fun hide_prompt()
+{
+    prompt_sprite.SetOpacity(0);
+    answer_sprite.SetOpacity(0);
+}
+
+fun bullets_text(count)
+{
+    text = "";
+    for (i = 0; i < count; i++)
+    {
+        text += "*";
+    }
+    return text;
+}
+
+fun display_normal_callback()
+{
+    hide_prompt();
+    label_sprite.SetOpacity(1);
+}
+
+fun display_password_callback(prompt, bullets)
+{
+    place_text(prompt_sprite, prompt, 80);
+    place_text(answer_sprite, bullets_text(bullets) + " ", 56);
+}
+
+fun display_question_callback(prompt, entry)
+{
+    place_text(prompt_sprite, prompt, 80);
+    place_text(answer_sprite, entry + " ", 56);
+}
+
+fun display_message_callback(text)
+{
+    place_text(message_sprite, text, 112);
+}
+
+fun hide_message_callback(text)
+{
+    message_sprite.SetOpacity(0);
+    label_sprite.SetOpacity(1);
+}
+
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
+Plymouth.SetDisplayMessageFunction(display_message_callback);
+Plymouth.SetHideMessageFunction(hide_message_callback);

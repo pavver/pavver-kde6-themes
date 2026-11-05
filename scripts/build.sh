@@ -13,7 +13,7 @@ usage() {
     cat <<'EOF'
 Usage: scripts/build.sh [--output DIR]
 
-Builds standalone SDDM, lock screen, wallpaper, and splash packages.
+Builds standalone SDDM, lock screen, wallpaper, splash, and Plymouth packages.
 EOF
 }
 
@@ -61,7 +61,12 @@ for required_path in \
     wallpaper/contents/config/main.xml \
     splash/metadata.json \
     splash/contents/splash/Splash.qml \
-    splash/contents/previews/splash.png; do
+    splash/contents/previews/splash.png \
+    plymouth/pavver.plymouth \
+    plymouth/pavver.script \
+    plymouth/pavver-quiet-shutdown.service \
+    plymouth/frames/frame-99.png \
+    plymouth/labels/label-boot.png; do
     [[ -e "${ROOT_DIR}/${required_path}" ]] || {
         echo "Missing required source path: ${required_path}" >&2
         exit 1
@@ -102,8 +107,10 @@ sddm_target="${staging_dir}/themes/sddm/pavver-sddm-theme"
 lock_target="${staging_dir}/themes/lockscreen/pavver-plasma-lockscreen"
 wallpaper_target="${staging_dir}/themes/wallpaper/pavver-wallpaper"
 splash_target="${staging_dir}/themes/splash/pavver-splash"
+plymouth_target="${staging_dir}/themes/plymouth/pavver"
 
-mkdir -p -- "${sddm_target}" "${lock_target}" "${wallpaper_target}" "${splash_target}"
+mkdir -p -- "${sddm_target}" "${lock_target}" "${wallpaper_target}" "${splash_target}" \
+    "${plymouth_target}"
 
 install -m 644 "${ROOT_DIR}/sddm/Main.qml" "${sddm_target}/Main.qml"
 install -m 644 "${ROOT_DIR}/sddm/SddmBackend.qml" "${sddm_target}/SddmBackend.qml"
@@ -139,6 +146,16 @@ install -m 644 "${ROOT_DIR}/splash/metadata.json" "${splash_target}/metadata.jso
 install -m 644 "${ROOT_DIR}/LICENSE" "${splash_target}/LICENSE"
 cp -a -- "${ROOT_DIR}/splash/contents" "${splash_target}/contents"
 cp -a -- "${SHARED_DIR}" "${splash_target}/contents/splash/PavverTheme"
+
+install -m 644 \
+    "${ROOT_DIR}/plymouth/pavver.plymouth" \
+    "${ROOT_DIR}/plymouth/pavver.script" \
+    "${ROOT_DIR}"/plymouth/frames/*.png \
+    "${ROOT_DIR}"/plymouth/labels/*.png \
+    "${ROOT_DIR}/LICENSE" \
+    "${plymouth_target}/"
+install -m 644 "${ROOT_DIR}/plymouth/pavver-quiet-shutdown.service" \
+    "${staging_dir}/themes/plymouth/pavver-quiet-shutdown.service"
 
 find "${staging_dir}" -type d -exec chmod 755 {} +
 find "${staging_dir}" -type f -exec chmod 644 {} +

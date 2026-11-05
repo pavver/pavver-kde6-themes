@@ -54,6 +54,7 @@ build_component() {
     local summary="$5"
     local details="$6"
     local readme_path="$7"
+    local systemd_unit="${8:-}"
     local package_root="${work_dir}/${package_name}"
     local installed_size
 
@@ -64,6 +65,10 @@ build_component() {
         "${package_root}/usr/share/doc/${package_name}/copyright"
     install -m 644 "${readme_path}" \
         "${package_root}/usr/share/doc/${package_name}/README.md"
+    if [[ -n "${systemd_unit}" ]]; then
+        install -D -m 644 "${systemd_unit}" \
+            "${package_root}/usr/lib/systemd/system/$(basename "${systemd_unit}")"
+    fi
 
     installed_size="$(du -sk "${package_root}" | awk '{ print $1 }')"
     {
@@ -125,6 +130,16 @@ build_component \
     'Installs a startup splash screen visible in Splash Screen settings.' \
     "${ROOT_DIR}/splash/README.md"
 
+build_component \
+    pavver-plymouth \
+    "${work_dir}/dist/themes/plymouth/pavver" \
+    /usr/share/plymouth/themes/pavver \
+    'plymouth' \
+    'Pavver boot and shutdown screen for Plymouth' \
+    'Installs a Plymouth theme and a service that keeps shutdown messages off the console.' \
+    "${ROOT_DIR}/plymouth/README.md" \
+    "${work_dir}/dist/themes/plymouth/pavver-quiet-shutdown.service"
+
 meta_root="${work_dir}/pavver-kde6-themes"
 mkdir -p -- "${meta_root}/DEBIAN" "${meta_root}/usr/share/doc/pavver-kde6-themes"
 install -m 644 "${ROOT_DIR}/LICENSE" "${meta_root}/usr/share/doc/pavver-kde6-themes/copyright"
@@ -139,6 +154,7 @@ install -m 644 "${ROOT_DIR}/README.md" "${meta_root}/usr/share/doc/pavver-kde6-t
     printf 'Maintainer: pavver <pavvers1@gmail.com>\n'
     printf 'Depends: pavver-sddm-theme (= %s), pavver-plasma-lockscreen (= %s), pavver-wallpaper (= %s), pavver-splash (= %s)\n' \
         "${VERSION}" "${VERSION}" "${VERSION}" "${VERSION}"
+    printf 'Suggests: pavver-plymouth (= %s)\n' "${VERSION}"
     printf 'Installed-Size: 1\n'
     printf 'Homepage: https://github.com/pavver/pavver-kde6-themes\n'
     printf 'Description: Complete Pavver visual theme family for KDE Plasma 6\n'

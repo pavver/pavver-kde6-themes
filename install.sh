@@ -13,10 +13,10 @@ usage() {
     cat <<'EOF'
 Usage: ./install.sh [--user|--system] [--component NAME] [--activate]
 
-Components: all, sddm, lockscreen, wallpaper, splash
+Components: all, sddm, lockscreen, wallpaper, splash, plymouth
 
 Without --activate, files are installed but no current theme setting is changed.
-User scope installs lockscreen, wallpaper, and splash. SDDM requires system scope.
+User scope installs lockscreen, wallpaper, and splash. SDDM and Plymouth require system scope.
 EOF
 }
 
@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${component}" in
-    all|sddm|lockscreen|wallpaper|splash) ;;
+    all|sddm|lockscreen|wallpaper|splash|plymouth) ;;
     *)
         echo "Unknown component: ${component}" >&2
         exit 2
@@ -83,6 +83,10 @@ if [[ "${scope}" == "user" && "${component}" == "sddm" ]]; then
     echo "SDDM can only be installed with --system." >&2
     exit 1
 fi
+if [[ "${scope}" == "user" && "${component}" == "plymouth" ]]; then
+    echo "Plymouth can only be installed with --system." >&2
+    exit 1
+fi
 
 work_dir="$(mktemp -d)"
 
@@ -99,6 +103,7 @@ else
     data_root="${XDG_DATA_HOME:-${HOME}/.local/share}"
 fi
 lockscreen_target="${data_root}/plasma/shells/pavver-plasma-lockscreen"
+readonly quiet_service="pavver-quiet-shutdown.service"
 
 is_selected() {
     [[ "${component}" == "all" || "${component}" == "$1" ]]
@@ -198,6 +203,19 @@ if is_selected splash; then
         "metadata.json"
 fi
 
+if is_selected plymouth; then
+    if [[ "${scope}" == "user" ]]; then
+        echo "Skipping Plymouth in user scope; use sudo ./install.sh --system."
+    else
+        install_tree \
+            "${work_dir}/dist/themes/plymouth/pavver" \
+            "/usr/share/plymouth/themes/pavver" \
+            "pavver.plymouth"
+        install -m 644 "${work_dir}/dist/themes/plymouth/${quiet_service}" \
+            "/etc/systemd/system/${quiet_service}"
+    fi
+fi
+
 if [[ "${activate}" == true ]]; then
     if is_selected sddm && [[ "${scope}" == "system" ]]; then
         install -d -m 755 /etc/sddm.conf.d
@@ -263,6 +281,16 @@ if [[ "${activate}" == true ]] && is_selected splash; then
     fi
 fi
 
+if [[ "${activate}" == true ]] && is_selected plymouth && [[ "${scope}" == "system" ]]; then
+    if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+        plymouth-set-default-theme pavver
+        systemctl enable "${quiet_service}"
+        echo "Activated the Plymouth theme. Rebuild the initramfs and add splash to the kernel command line."
+    else
+        echo "Warning: Plymouth is not installed, so the boot screen was not activated." >&2
+    fi
+fi
+
 if is_selected wallpaper; then
     echo "Select 'Pavver Animated Wallpaper' in Desktop and Wallpaper settings."
 fi
@@ -271,6 +299,9 @@ if is_selected splash && [[ "${activate}" == false ]]; then
 fi
 if is_selected sddm && [[ "${scope}" == "system" && "${activate}" == false ]]; then
     echo "Select 'Pavver SDDM Theme' in Login Screen settings, or rerun with --activate."
+fi
+if is_selected plymouth && [[ "${scope}" == "system" && "${activate}" == false ]]; then
+    echo "To activate the boot screen, rerun with: sudo ./install.sh --system --component plymouth --activate"
 fi
 if is_selected lockscreen && [[ "${activate}" == false ]]; then
     echo "To activate the lock screen in Plasma 6, rerun with: sudo ./install.sh --system --component lockscreen --activate"

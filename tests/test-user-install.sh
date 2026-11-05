@@ -46,6 +46,15 @@ kwriteconfig6 --file ksplashrc --group KSplash --key Theme example.custom.splash
 "${ROOT_DIR}/uninstall.sh" --user --component splash
 test "$(kreadconfig6 --file ksplashrc --group KSplash --key Theme)" = "example.custom.splash"
 
+if "${ROOT_DIR}/install.sh" --user --component plymouth >/dev/null 2>&1; then
+    echo "User scope unexpectedly accepted the Plymouth component" >&2
+    exit 1
+fi
+if "${ROOT_DIR}/uninstall.sh" --user --component plymouth >/dev/null 2>&1; then
+    echo "User scope unexpectedly removed the Plymouth component" >&2
+    exit 1
+fi
+
 kwriteconfig6 --file plasmashellrc --group Shell \
     --key ShellPackage pavver-plasma-lockscreen
 

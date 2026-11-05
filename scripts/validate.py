@@ -12,6 +12,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
+PLYMOUTH_FRAMES = 100
+
+
 def fail(message: str) -> None:
     raise ValueError(message)
 
@@ -86,6 +89,7 @@ def main() -> int:
     lockscreen = dist / "themes/lockscreen/pavver-plasma-lockscreen"
     wallpaper = dist / "themes/wallpaper/pavver-wallpaper"
     splash = dist / "themes/splash/pavver-splash"
+    plymouth = dist / "themes/plymouth/pavver"
 
     require_files(sddm, [
         "Main.qml", "SddmBackend.qml", "metadata.desktop", "theme.conf",
@@ -111,6 +115,24 @@ def main() -> int:
         "metadata.json", "LICENSE", "contents/splash/Splash.qml",
         "contents/previews/splash.png", "contents/splash/PavverTheme/qmldir",
     ])
+
+    require_files(plymouth, [
+        "pavver.plymouth", "pavver.script", "LICENSE",
+        "label-boot.png", "label-shutdown.png", "label-reboot.png",
+        *[f"frame-{index}.png" for index in range(PLYMOUTH_FRAMES)],
+    ])
+    require_files(dist / "themes/plymouth", ["pavver-quiet-shutdown.service"])
+    require_text(plymouth / "pavver.script", [f"FRAME_COUNT = {PLYMOUTH_FRAMES};"])
+
+    plymouth_theme = configparser.ConfigParser(interpolation=None)
+    plymouth_theme.optionxform = str
+    plymouth_theme.read(plymouth / "pavver.plymouth", encoding="utf-8")
+    if plymouth_theme.get("Plymouth Theme", "ModuleName", fallback="") != "script":
+        fail("Plymouth theme must use the script module")
+    if plymouth_theme.get("script", "ScriptFile", fallback="") != (
+        "/usr/share/plymouth/themes/pavver/pavver.script"
+    ):
+        fail("Plymouth theme points at an unexpected script")
 
     splash_metadata = load_json(splash / "metadata.json")
     if splash_metadata.get("KPackageStructure") != "Plasma/LookAndFeel":

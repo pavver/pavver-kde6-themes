@@ -5,6 +5,7 @@ pkgname=(
   pavver-plasma-lockscreen
   pavver-wallpaper
   pavver-splash
+  pavver-plymouth
   pavver-kde6-themes
 )
 pkgver=1.0.0
@@ -78,6 +79,21 @@ package_pavver-splash() {
     "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }
 
+package_pavver-plymouth() {
+  pkgdesc='Pavver boot and shutdown screen for Plymouth'
+  depends=('plymouth')
+
+  install -d "${pkgdir}/usr/share/plymouth/themes"
+  cp -a "${srcdir}/pavver-dist/themes/plymouth/pavver" \
+    "${pkgdir}/usr/share/plymouth/themes/"
+  install -Dm644 "${srcdir}/pavver-dist/themes/plymouth/pavver-quiet-shutdown.service" \
+    "${pkgdir}/usr/lib/systemd/system/pavver-quiet-shutdown.service"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${srcdir}/${_project}-${pkgver}/plymouth/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
+
 package_pavver-kde6-themes() {
   pkgdesc='Complete Pavver visual theme family for KDE Plasma 6'
   depends=(
@@ -86,6 +102,8 @@ package_pavver-kde6-themes() {
     "pavver-wallpaper=${pkgver}-${pkgrel}"
     "pavver-splash=${pkgver}-${pkgrel}"
   )
+  # Plymouth changes the initramfs, so it stays an explicit choice.
+  optdepends=('pavver-plymouth: boot and shutdown screen')
 
   install -Dm644 "${srcdir}/${_project}-${pkgver}/LICENSE" \
     "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
