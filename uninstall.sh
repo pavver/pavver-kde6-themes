@@ -107,26 +107,6 @@ remove_tree() {
     fi
 }
 
-if is_selected lockscreen && [[ "${scope}" == "user" ]]; then
-    state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/pavver-kde6-themes"
-    state_file="${state_dir}/previous-shell-package"
-    if command -v kreadconfig6 >/dev/null 2>&1 \
-        && command -v kwriteconfig6 >/dev/null 2>&1 \
-        && [[ "$(kreadconfig6 --file plasmashellrc --group Shell --key ShellPackage)" == "pavver-plasma-lockscreen" ]]; then
-        previous_shell_package="org.kde.plasma.desktop"
-        if [[ -f "${state_file}" ]]; then
-            IFS= read -r saved_shell_package < "${state_file}" || true
-            if [[ "${saved_shell_package:-}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ \
-                && "${saved_shell_package}" != "pavver-plasma-lockscreen" ]]; then
-                previous_shell_package="${saved_shell_package}"
-            fi
-        fi
-        kwriteconfig6 --file plasmashellrc --group Shell \
-            --key ShellPackage "${previous_shell_package}" --notify
-        echo "Restored the previous Plasma shell before removing the lock screen."
-    fi
-fi
-
 if is_selected sddm; then
     if [[ "${scope}" == "user" ]]; then
         echo "Skipping SDDM in user scope."
@@ -143,10 +123,36 @@ if is_selected sddm; then
 fi
 
 if is_selected lockscreen; then
-    remove_tree "${lockscreen_target}" metadata.json
-    if [[ "${scope}" == "user" && -n "${state_file:-}" ]]; then
-        rm -f -- "${state_file}"
-        rmdir -- "${state_dir}" 2>/dev/null || true
+    if [[ "${scope}" == "system" ]]; then
+        sys_lock_dir="/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen"
+        sys_lock_backup="/usr/share/plasma/shells/org.kde.plasma.desktop/contents/.lockscreen.orig"
+        if [[ -d "${sys_lock_backup}" ]]; then
+            if grep -q LockScreenBackend "${sys_lock_dir}/LockScreenUi.qml"; then
+                rm -rf -- "${sys_lock_dir}"
+                mv -- "${sys_lock_backup}" "${sys_lock_dir}"
+                echo "Restored original KDE Plasma lock screen from backup."
+            else
+                # A Plasma upgrade already restored newer stock QML; the backup is older.
+                rm -rf -- "${sys_lock_backup}" \
+                    "${sys_lock_dir}/LockScreenBackend.qml" "${sys_lock_dir}/PavverTheme"
+                echo "Removed Pavver leftovers; the stock lock screen was already restored."
+            fi
+        fi
+        remove_tree "/usr/share/plasma/shells/pavver-plasma-lockscreen" metadata.json
+    else
+        remove_tree "${lockscreen_target}" metadata.json
+        state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/pavver-kde6-themes"
+        rm -rf -- "${state_dir}" 2>/dev/null || true
+    fi
+
+    # Ensure plasmashellrc is reset if it pointed to pavver-plasma-lockscreen
+    if command -v kreadconfig6 >/dev/null 2>&1 && command -v kwriteconfig6 >/dev/null 2>&1; then
+        current_shell="$(kreadconfig6 --file plasmashellrc --group Shell --key ShellPackage 2>/dev/null || true)"
+        if [[ "${current_shell}" == "pavver-plasma-lockscreen" ]]; then
+            kwriteconfig6 --file plasmashellrc --group Shell \
+                --key ShellPackage "org.kde.plasma.desktop" --notify
+            echo "Restored plasmashellrc ShellPackage to org.kde.plasma.desktop."
+        fi
     fi
 fi
 

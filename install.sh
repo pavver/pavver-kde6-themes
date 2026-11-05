@@ -165,31 +165,6 @@ install_tree() {
     printf 'Installed %s\n' "${target_dir}"
 }
 
-set_fallback_package() {
-    local metadata_path="$1"
-    local fallback_package="$2"
-    local metadata_tmp
-
-    metadata_tmp="$(mktemp "$(dirname "${metadata_path}")/.metadata.json.XXXXXX")"
-    if ! awk -v fallback="${fallback_package}" '
-        /^[[:space:]]*"X-Plasma-FallbackPackage"[[:space:]]*:/ {
-            match($0, /^[[:space:]]*/)
-            indent = substr($0, 1, RLENGTH)
-            print indent "\"X-Plasma-FallbackPackage\": \"" fallback "\""
-            replaced++
-            next
-        }
-        { print }
-        END { exit(replaced == 1 ? 0 : 1) }
-    ' "${metadata_path}" > "${metadata_tmp}"; then
-        rm -f -- "${metadata_tmp}"
-        echo "Failed to update X-Plasma-FallbackPackage in ${metadata_path}." >&2
-        return 1
-    fi
-
-    chmod 644 "${metadata_tmp}"
-    mv -f -- "${metadata_tmp}" "${metadata_path}"
-}
 
 if is_selected sddm; then
     if [[ "${scope}" == "user" ]]; then
@@ -236,50 +211,33 @@ if [[ "${activate}" == true ]]; then
     fi
 
     if is_selected lockscreen; then
-        if [[ "${scope}" == "user" ]]; then
-            for command_name in kreadconfig6 kwriteconfig6; do
-                command -v "${command_name}" >/dev/null 2>&1 || {
-                    echo "${command_name} is required to activate the lock screen." >&2
-                    exit 1
-                }
-            done
-
-            state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/pavver-kde6-themes"
-            state_file="${state_dir}/previous-shell-package"
-            current_shell_package="$(kreadconfig6 --file plasmashellrc --group Shell \
-                --key ShellPackage --default org.kde.plasma.desktop)"
-
-            if [[ "${current_shell_package}" == "pavver-plasma-lockscreen" && -f "${state_file}" ]]; then
-                IFS= read -r previous_shell_package < "${state_file}" || true
-            elif [[ "${current_shell_package}" == "pavver-plasma-lockscreen" ]]; then
-                previous_shell_package="org.kde.plasma.desktop"
+        if [[ "${scope}" == "system" ]]; then
+            sys_lock_dir="/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen"
+            sys_lock_backup="/usr/share/plasma/shells/org.kde.plasma.desktop/contents/.lockscreen.orig"
+            if [[ -d "${sys_lock_dir}" ]]; then
+                # Plasma upgrades restore stock QML, which makes any earlier backup stale.
+                if ! grep -q LockScreenBackend "${sys_lock_dir}/LockScreenUi.qml"; then
+                    rm -rf -- "${sys_lock_backup}"
+                    cp -a -- "${sys_lock_dir}" "${sys_lock_backup}"
+                    rm -rf -- "${sys_lock_backup}/LockScreenBackend.qml" "${sys_lock_backup}/PavverTheme"
+                fi
+                cp -a -- "${work_dir}/dist/themes/lockscreen/pavver-plasma-lockscreen/contents/lockscreen/." "${sys_lock_dir}/"
+                echo "Activated the lock screen in KDE Plasma 6 (desktop session and panels preserved)."
             else
-                previous_shell_package="${current_shell_package}"
+                echo "Warning: ${sys_lock_dir} not found; lock screen installed as standalone package only." >&2
             fi
-
-            if [[ ! "${previous_shell_package}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ \
-                || "${previous_shell_package}" == "pavver-plasma-lockscreen" ]]; then
-                echo "Refusing to use an invalid fallback shell package: ${previous_shell_package}" >&2
-                exit 1
-            fi
-
-            set_fallback_package \
-                "${lockscreen_target}/metadata.json" \
-                "${previous_shell_package}"
-
-            install -d -m 700 "${state_dir}"
-            state_tmp="$(mktemp "${state_dir}/.previous-shell-package.XXXXXX")"
-            printf '%s\n' "${previous_shell_package}" > "${state_tmp}"
-            chmod 600 "${state_tmp}"
-            mv -f -- "${state_tmp}" "${state_file}"
-
-            if [[ "${current_shell_package}" != "pavver-plasma-lockscreen" ]]; then
-                kwriteconfig6 --file plasmashellrc --group Shell \
-                    --key ShellPackage pavver-plasma-lockscreen --notify
-            fi
-            echo "Activated the lock screen; the previous Plasma shell remains its fallback."
         else
-            echo "Lock screen installed system-wide. Activate it with a user-scope install so the current shell can be preserved."
+            echo "Lock screen installed in user scope."
+            echo "To safely replace the active system lock screen in Plasma 6, run: sudo ./install.sh --system --component lockscreen --activate"
+        fi
+
+        # Always protect desktop panels: ensure plasmashellrc does not use pavver-plasma-lockscreen as full shell
+        if command -v kreadconfig6 >/dev/null 2>&1 && command -v kwriteconfig6 >/dev/null 2>&1; then
+            current_shell="$(kreadconfig6 --file plasmashellrc --group Shell --key ShellPackage 2>/dev/null || true)"
+            if [[ "${current_shell}" == "pavver-plasma-lockscreen" ]]; then
+                kwriteconfig6 --file plasmashellrc --group Shell --key ShellPackage "org.kde.plasma.desktop" --notify
+                echo "Restored plasmashellrc ShellPackage to org.kde.plasma.desktop to protect desktop panels."
+            fi
         fi
     fi
 fi
@@ -291,5 +249,5 @@ if is_selected sddm && [[ "${scope}" == "system" && "${activate}" == false ]]; t
     echo "Select 'Pavver SDDM Theme' in Login Screen settings, or rerun with --activate."
 fi
 if is_selected lockscreen && [[ "${activate}" == false ]]; then
-    echo "To preserve the current Plasma shell, activate explicitly with: ./install.sh --user --component lockscreen --activate"
+    echo "To activate the lock screen in Plasma 6, rerun with: sudo ./install.sh --system --component lockscreen --activate"
 fi
