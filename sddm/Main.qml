@@ -268,6 +268,7 @@ Item {
         Pavver.LoginLoader {
             id: catLoader
             anchors.centerIn: parent
+            caption: "Вхід у систему"
             opacity: root.isLoggingIn ? 1.0 : 0.0
             visible: opacity > 0.0
 

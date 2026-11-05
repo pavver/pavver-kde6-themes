@@ -33,9 +33,18 @@ Item {
     width: implicitWidth
     height: implicitHeight
 
+    // Names what the screen is waiting for. Plymouth shows the same line from
+    // plymouth/labels, so keep its offset and size in step with render_labels.py.
+    property string caption: ""
+
     property real blurStrength: 12.0
     readonly property real effectiveBlurRadius: Math.max(root.blurStrength * root.scaleFactor, 10.0)
     readonly property real animTime: animationClock.elapsed
+
+    FontLoader {
+        id: captionFont
+        source: Theme.fontSource
+    }
 
     AnimationClock {
         id: animationClock
@@ -182,5 +191,16 @@ Item {
         sourceSize.height: height
         smooth: true
         mipmap: true
+    }
+
+    // 3. Caption below the blur of the fully pulsed triangles
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: root.height * 1.082
+        visible: root.caption !== ""
+        text: root.caption
+        color: Theme.textPrimary
+        font.family: captionFont.status === FontLoader.Ready ? captionFont.name : "Cascadia Code"
+        font.pixelSize: Math.round(root.height * 0.04)
     }
 }
